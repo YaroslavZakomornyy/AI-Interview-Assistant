@@ -1,40 +1,57 @@
 # USF-CSE
 CSE Project at USF
 
-Prerequisites:
-    You must install the npm if you haven't done so yet. <br>
-    Now to initialize the project (you have to do it once): <br>
-        - Open the terminal<br>
-        - Go to the project's root folder and type:
-```
-npm install
-```       
-    ```- Install Node.js:
-```
-npm install node
-```    
+# Project Setup and Usage Guide
 
-    Azure OpenAI API key and the endpoint. You can get them this way:
-        - Log into the Azure.
-        - Click on the Azure OpenAI resource (check the type column) in the home tab (https://portal.azure.com/#home).
-        - In the overview tab click on the "Go to Azure OpenAI Studio".
-        - On the right click on the Explore Azure AI Studio.
-        - Go to the deployments tab.
-        - Pick the one you want or create a new one (gpt-4o-mini is the cheapest one).
-        - On the right you will see the Target URI and Key.
-        - Create the .env file in the /test-server.
-        - Insert the following lines:
-            
-            API_KEY="YOUR KEY"
-            ENDPOINT="YOUR ENDPOINT"
-        
-To Run:
-    You will need to terminals. In the first terminal go to the project's root folder and type:
+## Prerequisites
 
-        npm run dev
+1. **Install npm** (if you haven't done so already):
+   - Open the terminal
+   - Go to the project's root folder and type:
+   ```bash
+   npm install
+   ```
 
-    In the second terminal go to the /test-server folder and type:
+2. **Install Node.js**:
+   ```bash
+   npm install node
+   ```
 
-        node app.js
+3. **Azure OpenAI API Key and Endpoint Setup**:
+   - Log into [Azure](https://portal.azure.com/#home).
+   - Click on the **Azure OpenAI** resource (check the "type" column) in the home tab.
+   - In the **Overview** tab, click on "Go to Azure OpenAI Studio".
+   - On the right, click on **Explore Azure AI Studio**.
+   - Go to the **Deployments** tab.
+   - Select an existing deployment or create a new one (e.g., `gpt-4o-mini` is the most affordable option).
+   - You will find the **Target URI** and **API Key** on the right.
 
-That's it! Unless we exhaust our quota, it will work just fine. Make sure not to spam it with useless tests and rather test it in the Azure AI Studio playground.
+4. **Create a `.env` file** in the `/test-server` folder and insert the following lines:
+   ```bash
+   API_KEY="YOUR KEY"
+   ENDPOINT="YOUR ENDPOINT"
+   ```
+
+## How to Run
+
+1. You will need **two terminals**.
+
+2. **First terminal**: 
+   - Navigate to the project's root folder and run:
+   ```bash
+   npm run dev
+   ```
+
+3. **Second terminal**:
+   - Navigate to the `/test-server` folder and run:
+   ```bash
+   node app.js
+   ```
+
+---
+
+That's it! The project should now be running unless we've exhausted our quota.
+
+### Notes:
+- Avoid spamming the API with unnecessary tests.
+- You can test your queries in the **Azure AI Studio Playground** for a better experience.
