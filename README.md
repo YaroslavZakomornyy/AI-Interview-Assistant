@@ -5,19 +5,20 @@ CSE Project at USF
 
 ## Prerequisites
 
-1. **Install npm** (if you haven't done so already):
+1. **Install npm** (if you haven't done so already).
+2. **Install dependencies**:
    - Open the terminal
    - Go to the project's root folder and type:
    ```bash
    npm install
    ```
 
-2. **Install Node.js**:
+3. **Install Node.js**:
    ```bash
    npm install node
    ```
 
-3. **Azure OpenAI API Key and Endpoint Setup**:
+4. **Azure OpenAI API Key and Endpoint Setup**:
    - Log into [Azure](https://portal.azure.com/#home).
    - Click on the **Azure OpenAI** resource (check the "type" column) in the home tab.
    - In the **Overview** tab, click on "Go to Azure OpenAI Studio".
@@ -26,7 +27,7 @@ CSE Project at USF
    - Select an existing deployment or create a new one (e.g., `gpt-4o-mini` is the most affordable option).
    - You will find the **Target URI** and **API Key** on the right.
 
-4. **Create a `.env` file** in the `/test-server` folder and insert the following lines:
+5. **Create a `.env` file** in the `/test-server` folder and insert the following lines:
    ```bash
    API_KEY="YOUR KEY"
    ENDPOINT="YOUR ENDPOINT"
