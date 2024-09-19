@@ -2,19 +2,17 @@
 CSE Project at USF
 
 Prerequisites:
-    You will need to install the npm if you haven't done so yet.
-    Now to initialize the project (you have to do it once):
-        - Open the terminal
+    You must install the npm if you haven't done so yet. <br>
+    Now to initialize the project (you have to do it once): <br>
+        - Open the terminal<br>
         - Go to the project's root folder and type:
-
-                npm install
-        
-        That will install your dependencies.
-    
-    Install Node.js:
-
-        npm install node
-    
+```
+npm install
+```       
+    ```- Install Node.js:
+```
+npm install node
+```    
 
     Azure OpenAI API key and the endpoint. You can get them this way:
         - Log into the Azure.
