@@ -32,11 +32,16 @@ function Chat() {
     };
 
     return (
+        <div className="chat-container">
+        {/* Chatbox heading */}
+        <div className="chatbox-heading">AI Interview Assistant</div>
+
         <div className="App">
             <input type="text" id="user-message"></input>
             <button onClick={fetchChatResponse}>Submit</button>
             {/* <div className='AI-text'>{`${JSON.stringify(response, null, 2)}`}</div> */}
             <div className='AI-text'>{`${response}`}</div>
+        </div>
         </div>
     );
 }
