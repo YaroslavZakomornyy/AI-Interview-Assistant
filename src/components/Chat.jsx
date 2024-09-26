@@ -8,6 +8,13 @@ function Chat() {
         try {
             const textField = document.getElementById("user-message");
             const userMessage = textField.value;
+
+            // Check if the message is empty
+            if (!userMessage) {
+                alert("Please enter a message before submitting.");
+                return;  // Stop further execution if message is empty
+            }
+
             textField.value = "";
 
             // Add user message to messages state
