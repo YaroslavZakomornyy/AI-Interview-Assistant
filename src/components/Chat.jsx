@@ -1,43 +1,27 @@
-import React, { useState } from 'react';
+import { useState, useRef } from 'react';
 import './Chat.css';
+import { sendMessage as apiSendMessage, setParameters as apiSetParameters } from './api';
 
 function Chat() {
     const [messages, setMessages] = useState([]); // Stores both user and AI messages
+    const chatInputFieldRef = useRef(null);
 
     const fetchChatResponse = async () => {
-        try {
-            const textField = document.getElementById("user-message");
-            const userMessage = textField.value;
+        const userMessage = chatInputFieldRef.current.value;
 
-            // Check if the message is empty
-            if (!userMessage) {
-                alert("Please enter a message before submitting.");
-                return;  // Stop further execution if message is empty
-            }
-
-            textField.value = "";
-
-            // Add user message to messages state
-            setMessages(prevMessages => [...prevMessages, { sender: 'user', text: userMessage }]);
-
-            const res = await fetch('http://localhost:3000/api/message', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    message: userMessage,
-                })
-            });
-
-            const data = await res.json();
-            const aiResponse = data.choices[0].message.content;
-
-            // Add AI response to messages state
-            setMessages(prevMessages => [...prevMessages, { sender: 'ai', text: aiResponse }]);
-        } catch (error) {
-            console.error('Error:', error);
+        // Check if the message is empty
+        if (!userMessage) {
+            return;  // Stop further execution if message is empty
         }
+
+        chatInputFieldRef.current.value = "";
+
+        // Add user message to messages state
+        setMessages(prevMessages => [...prevMessages, { sender: 'user', text: userMessage }]);
+        
+        const reply = await apiSendMessage(userMessage);
+
+        setMessages(prevMessages => [...prevMessages, { sender: 'ai', text: reply }]);
     };
 
     return (
@@ -50,7 +34,7 @@ function Chat() {
                     <div 
                         key={index} 
                         className={`chat-message ${msg.sender === 'user' ? 'user-message' : 'ai-message'}`}
-                    >
+                        >
                         {msg.text}
                     </div>
                 ))}
@@ -58,7 +42,7 @@ function Chat() {
 
             {/* Input section */}
             <div className="chat-input">
-                <input type="text" id="user-message" placeholder="Type your message..." />
+                <input ref={chatInputFieldRef} type="text" id="user-message" placeholder="Type your message..." />
                 <button onClick={fetchChatResponse}>Submit</button>
             </div>
         </div>
