@@ -1,0 +1,22 @@
+.settings-container{
+    /* min-height: 100vh; */
+    width: 200px;
+    height: 300px;
+    background-color: #1a1a2e;
+    border-radius: 12px;
+    padding: 1rem;
+    max-width: 800px;
+    margin: 0 auto;
+    /* height: 70vh; */
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    /* justify-content: space-between; */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    text-align: left;
+  }
+  
+  .settings-container button{
+    margin-top: auto;
+  }
+  
