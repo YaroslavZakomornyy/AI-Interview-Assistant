@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+const messagePreprocessor = require("./message_preprocessor");
 // const { AzureOpenAI } = require("openai");
 
 require("dotenv").config();
@@ -50,6 +51,10 @@ app.post('/api/message', async (req, res) => {
     // Make the HTTP request
     const response = await axios.post(endpoint, payload, { headers });
 
+    context.push(
+      response.data.choices[0].message
+    );
+
     // Send response back to client
     res.status(200).json(response.data);
   } catch (error)
@@ -69,39 +74,11 @@ app.post('/api/ai-parameters', async (req, res) => {
     return;
   }
 
-  let message = "You are an interviewer at ";
-
-  switch (parameters.quality)
-  {
-    case 'great':
-      message += "CoolCompanyCo. It is a great place to work at and has a lot of benefits.";
-      break;
-
-    case "good":
-      message += "GoodCompanyCo. It is a good place to work at with its own benefits and drawbacks.";
-      break;
-
-    case "bad":
-      message += "BadCompanyCo. It is an awful place to work at, but your task is to keep it from the interviewee."
-      break;
-  }
-
-  message += " You have to conduct a technical interview and be ";
-
-  switch (parameters.beh)
-  {
-    case "enthusiastic":
-      message += "interested and enthusiastic during this interview. Try to keep your answers on a short side.";
-      break;
-
-    case "stoic":
-      message += "levelheaded and stoic during this interview.";
-      break;
-
-    case "dismissive":
-      message += "adversarial and dismissive during this interview."
-      break;
-  }
+  const message = messagePreprocessor.buildParameterQuery({
+    behavior: parameters.beh,
+    workplace_quality: parameters.quality,
+    interview_style: parameters.int
+  });
 
   console.log(message);
 

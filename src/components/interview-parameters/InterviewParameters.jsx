@@ -5,12 +5,14 @@ import { useEffect, useRef } from "react";
 export default function InterviewParameters() {
   const behSelectionRef = useRef(null);
   const qualitySelectionRef = useRef(null);
+  const interviewSelectionRef = useRef(null);
 
 
-  const updateParameters = async (behavior, quality) => {
+  const updateParameters = async (behavior, quality, interviewStyle) => {
     const parameters = {
       "beh" : behavior,
-      "quality": quality
+      "quality": quality,
+      "int" : interviewStyle
     }
 
     apiSetParameters(parameters);
@@ -25,7 +27,7 @@ export default function InterviewParameters() {
         <select name="behavior" id="behavior-drop-down" ref={behSelectionRef}>
           <option value="enthusiastic">Interested and enthusiastic</option>
           <option value="stoic">Levelheaded and stoic</option>
-          <option value="dismissive">Adversarial and dismissive</option>
+          <option value="cold">Adversarial and dismissive</option>
         </select>
       </label>
 
@@ -38,7 +40,19 @@ export default function InterviewParameters() {
         </select>
       </label>
 
-      <button onClick={() => updateParameters(behSelectionRef.current.value, qualitySelectionRef.current.value)}>Submit</button>
+      {/* Interviewer type */}
+      <label htmlFor="interview-type-drop-down">Interview style
+        <select name="company-rating" id="interview-type-drop-down" ref={interviewSelectionRef}>
+          <option value="rec">Recruiter (High-level)</option>
+          <option value="eng">Engineer (Technical)</option>
+          <option value="hr">Hiring Manager (Behavioral)</option>
+        </select>
+      </label>
+
+      <button onClick={() => updateParameters(behSelectionRef.current.value, qualitySelectionRef.current.value, interviewSelectionRef.current.value)}
+              >
+                Submit
+      </button>
     </div>
   );
 }

@@ -6,6 +6,13 @@ function Chat() {
     const [messages, setMessages] = useState([]); // Stores both user and AI messages
     const chatInputFieldRef = useRef(null);
 
+    function handleEnterPress(e){
+        if (e.key === "Enter") {
+            fetchChatResponse();
+        }
+      }
+
+
     const fetchChatResponse = async () => {
         const userMessage = chatInputFieldRef.current.value;
 
@@ -42,7 +49,7 @@ function Chat() {
 
             {/* Input section */}
             <div className="chat-input">
-                <input ref={chatInputFieldRef} type="text" id="user-message" placeholder="Type your message..." />
+                <input ref={chatInputFieldRef} type="text" id="user-message" placeholder="Type your message..." onKeyUp={handleEnterPress}/>
                 <button onClick={fetchChatResponse}>Submit</button>
             </div>
         </div>
