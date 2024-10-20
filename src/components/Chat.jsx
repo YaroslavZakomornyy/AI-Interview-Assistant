@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import './Chat.css';
 import { sendMessage as apiSendMessage, setParameters as apiSetParameters } from './api';
+import InterviewParameters from './interview-parameters/InterviewParameters'
 
 function Chat() {
     const [messages, setMessages] = useState([]); // Stores both user and AI messages
@@ -25,25 +26,33 @@ function Chat() {
     };
 
     return (
-        <div className="chat-container">
-            <div className="chatbox-heading">AI Interview Assistant</div>
-            
-            {/* Messages section */}
-            <div className="chat-messages">
-                {messages.map((msg, index) => (
-                    <div 
-                        key={index} 
-                        className={`chat-message ${msg.sender === 'user' ? 'user-message' : 'ai-message'}`}
-                        >
-                        {msg.text}
-                    </div>
-                ))}
-            </div>
+        <div className="chat-container-with-parameters">
 
-            {/* Input section */}
-            <div className="chat-input">
-                <input ref={chatInputFieldRef} type="text" id="user-message" placeholder="Type your message..." />
-                <button onClick={fetchChatResponse}>Submit</button>
+            {/* Chat section */}
+            <div className="chat-section">
+                <div className="chatbox-heading">AI Interview Assistant</div>
+                
+                {/* Messages section */}
+                <div className="chat-messages">
+                    {messages.map((msg, index) => (
+                        <div 
+                            key={index} 
+                            className={`chat-message ${msg.sender === 'user' ? 'user-message' : 'ai-message'}`}
+                            >
+                            {msg.text}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Input section */}
+                <div className="chat-input">
+                    <input ref={chatInputFieldRef} type="text" id="user-message" placeholder="Type your message..." />
+                    <button onClick={fetchChatResponse}>Submit</button>
+                </div>
+            </div>
+            {/* Interview Parameters section */}
+            <div className="interview-parameters-section">
+                <InterviewParameters />
             </div>
         </div>
     );

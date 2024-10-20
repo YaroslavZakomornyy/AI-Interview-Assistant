@@ -1,0 +1,177 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    background: linear-gradient(to right, #4A148C, #1A237E); /* Dark purple to dark blue */
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    height: 100%;
+    width: 100%;
+}
+
+#root {
+    height: 100%;
+    width: 100%;
+    background: transparent;
+}
+
+.landing-container {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(
+        135deg,
+        rgba(74, 20, 140, 1) 0%,    /* Dark purple */
+        rgba(26, 35, 126, 1) 100%    /* Dark blue */
+    );
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-bar {
+    width: 100%;
+    padding: 24px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    background-color: transparent;
+}
+
+.logo {
+    color: white;
+    font-weight: 600;
+    font-size: 24px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.logo img {
+    height: 32px;
+    margin-right: 12px;
+}
+
+.nav-button {
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.content-section {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
+    text-align: center;
+    background: transparent;
+    /* Optional: Add a subtle radial gradient for depth */
+    background: radial-gradient(
+        circle at center,
+        rgba(74, 20, 140, 0.8) 0%,
+        rgba(26, 35, 126, 0.8) 100%
+    );
+}
+
+h1 {
+    font-size: 72px;
+    line-height: 1.1;
+    font-weight: 600;
+    margin-bottom: 24px;
+    letter-spacing: -0.02em;
+    max-width: 900px;
+}
+
+p {
+    font-size: 24px;
+    line-height: 1.5;
+    margin-bottom: 40px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.9);
+    max-width: 600px;
+}
+
+.cta-button {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    text-decoration: none;
+    padding: 16px 32px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+}
+
+.cta-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Add a subtle glow effect to the CTA button */
+.cta-button::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    border-radius: 10px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.cta-button:hover::after {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    h1 {
+        font-size: 48px;
+    }
+    
+    p {
+        font-size: 20px;
+    }
+    
+    .nav-bar {
+        padding: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 36px;
+    }
+    
+    .nav-bar {
+        padding: 16px;
+    }
+    
+    .logo {
+        font-size: 20px;
+    }
+}

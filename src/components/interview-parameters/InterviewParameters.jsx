@@ -21,22 +21,20 @@ export default function InterviewParameters() {
       <div className="chatbox-heading">Parameters</div>
 
       {/* Behavior selection */}
-      <label htmlFor="behavior-drop-down">Behavior
+      <label htmlFor="behavior-drop-down">Behavior</label>
         <select name="behavior" id="behavior-drop-down" ref={behSelectionRef}>
           <option value="enthusiastic">Interested and enthusiastic</option>
           <option value="stoic">Levelheaded and stoic</option>
           <option value="dismissive">Adversarial and dismissive</option>
         </select>
-      </label>
 
       {/* Company quality selection */}
-      <label htmlFor="company-rating-drop-down">Workplace quality
+      <label htmlFor="company-rating-drop-down">Workplace quality</label>
         <select name="company-rating" id="company-rating-drop-down" ref={qualitySelectionRef}>
           <option value="great">Great place to work</option>
           <option value="fine">Average, has good and bad</option>
           <option value="bad">Avoid it</option>
         </select>
-      </label>
 
       <button onClick={() => updateParameters(behSelectionRef.current.value, qualitySelectionRef.current.value)}>Submit</button>
     </div>
