@@ -16,7 +16,7 @@ function buildParameterQuery({behavior, workplace_quality, interview_style}) {
       break;
   }
 
-  message = " Your company is the ";
+  message += " Your company is the ";
 
   switch (workplace_quality)
   {
@@ -33,10 +33,6 @@ function buildParameterQuery({behavior, workplace_quality, interview_style}) {
       break;
   }
 
-  message += " You have to conduct a ";
-
-  
-
   message += " and be ";
 
   switch (behavior)
@@ -50,7 +46,7 @@ function buildParameterQuery({behavior, workplace_quality, interview_style}) {
       break;
 
     case "cold":
-      message += "cold and dismissive during this interview. Remember it is still an official setting, no insults."
+      message += "cold and dismissive during this interview. Remember it is an official setting, be professional."
       break;
   }
 
@@ -59,7 +55,4 @@ function buildParameterQuery({behavior, workplace_quality, interview_style}) {
     return message; // or return some result if needed
 };
 
-
-module.exports = {
-  buildParameterQuery
-};
+export default buildParameterQuery;

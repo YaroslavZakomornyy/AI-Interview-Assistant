@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import axios from "axios";
-import redisClient from "../redis-client";
-import messagePreprocessor from "../services/message_preprocessor";
+import redisClient from "../redis-client.js";
+import buildParameterQuery from "../services/message_preprocessor.js";
 
 dotenv.config();
 
@@ -23,7 +23,7 @@ const appendNewMessage = (messageHistory, newMessage, role) => {
 }
 
 const sendMessage = async (req, res, next) => {
-    const userId = req.headers['X-User-ID'];
+    const userId = req.headers['x-user-id'];
 
     if (!userId)
     {
@@ -37,11 +37,10 @@ const sendMessage = async (req, res, next) => {
     }
 
     //TODO: Should make async!
-    
-
     const history = redisClient.get(userId);
 
     appendNewMessage(history, userMessage, 'user');
+    console.log(history[history.length - 1]);
 
     try
     {
@@ -61,11 +60,13 @@ const sendMessage = async (req, res, next) => {
         // Make the HTTP request
         const response = await axios.post(endpoint, payload, { headers });
 
-        appendNewMessage(history, response.data.choices[0].message, 'assistant');
-        redisClient.set(userId, history);
+        appendNewMessage(history, response.data.choices[0].message.content, 'assistant');
+        redisClient.push(userId, history[history.length - 1]);
+
         // Send response back to client
         return res.status(200).json(response.data);
-    } catch (error) {
+    } catch (error)
+    {
         console.error(error);
         return res.status(500).json({ error: 'Error with OpenAI API' });
     }
@@ -73,7 +74,7 @@ const sendMessage = async (req, res, next) => {
 
 
 const setParameters = async (req, res) => {
-    const userId = req.headers['X-User-ID'];
+    const userId = req.headers['x-user-id'];
 
     if (!userId)
     {
@@ -82,34 +83,31 @@ const setParameters = async (req, res) => {
 
     const parameters = await JSON.parse(req.body.message);
 
-  if (req.body.message === undefined || parameters.quality === undefined || parameters.beh === undefined)
-  {
-    return res.status(400).json({ error: 'Some parameters are missing.' });
-  }
+    if (req.body.message === undefined || parameters.quality === undefined || parameters.beh === undefined)
+    {
+        return res.status(400).json({ error: 'Some parameters are missing.' });
+    }
 
-  const message = messagePreprocessor.buildParameterQuery({
-    behavior: parameters.beh,
-    workplace_quality: parameters.quality,
-    interview_style: parameters.int
-  });
+    const message = buildParameterQuery({
+        behavior: parameters.beh,
+        workplace_quality: parameters.quality,
+        interview_style: parameters.int
+    });
 
-  console.log(message);
-  
-  const params =
-  [
+    const params =
     {
         "role": "system",
         "content": [
-        {
-            "type": "text",
-            "text": message
-        }
+            {
+                "type": "text",
+                "text": message
+            }
         ]
-    }  
-  ];
-  
-  if (redisClient.contains(userId)) redisClient.set(userId, params);
-  return res.sendStatus(204);
+    };
+
+    redisClient.push(userId, params);
+
+    return res.sendStatus(204);
 }
 
 
