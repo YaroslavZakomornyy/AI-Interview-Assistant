@@ -3,20 +3,34 @@ import './ResumePage.css';
 import {evaluateResume as apiEvaluateResume} from './api';
 
 function ResumePage() {
-    const [feedback, setFeedback] = useState(null);
+    const [feedback, setFeedback] = useState(null); 
+
+    const stateFeedback = (fb) => {
+      switch(fb){
+        case "Uploading":
+          setFeedback("Uploading your resume...");
+          break;
+          case "Evaluating":
+            setFeedback("Analyzing your resume...");
+            break;
+          case "Done":
+            setFeedback("Retrieving your resume...");
+      }
+    }
+
 
     const handleFileChange = (event) => {
     const file = event.target.files[0];
     
 
       const inquireFeedback = async() =>{
-        const res = await apiEvaluateResume(file);
+        const res = await apiEvaluateResume(file, stateFeedback);
         console.log(res);
+        // setFeedback(res);
       } 
 
     if (file && file.type === 'application/pdf') {
       // Process the PDF file here (replace with actual logic)
-      setFeedback('Analyzing your resume...');
       inquireFeedback();
     } else {
       setFeedback('Please upload a PDF file.');

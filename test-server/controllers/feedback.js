@@ -56,28 +56,28 @@ const feedback = async (req, res) => {
 
     const contents = await parse(file.path);
 
-    // const messages =
-    // [
-    //     {
-    //         "role": "system",
-    //         "content":"Analyze the provided resume file and give feedback on positive and negative sides of the resume." +
-    //                     "Make sure to score the user from 0 to 10 in the following categories: -Style -Consistency -Content and " +
-    //                     "any other categories you find useful. Give tips on how to improve the resume."
-            
-    //     },
-    //     {
-    //         "role": "user",
-    //         "content": contents,
-    //     },
-    // ]
-
     const messages =
     [
         {
+            "role": "system",
+            "content":"Analyze the provided resume file and give feedback on positive and negative sides of the resume." +
+                        "Make sure to score the user from 0 to 10 in the following categories: -Style -Consistency -Content and " +
+                        "any other categories you find useful. Give tips on how to improve the resume."
+            
+        },
+        {
             "role": "user",
-            "content":"Hi!",
-        }
+            "content": contents,
+        },
     ]
+
+    // const messages =
+    // [
+    //     {
+    //         "role": "user",
+    //         "content":"Hi!",
+    //     }
+    // ]
     
     const headers = {
         "Content-Type": "application/json",
@@ -107,3 +107,7 @@ const feedback = async (req, res) => {
 export default {
     feedback
 }
+
+
+
+
