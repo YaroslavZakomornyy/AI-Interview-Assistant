@@ -1,11 +1,12 @@
-import { useState, useRef } from 'react';
-import './Chat.css';
 import { sendMessage as apiSendMessage, setParameters as apiSetParameters } from './api';
+import { useState } from 'react';
+import './Chat.css';
 import InterviewParameters from './interview-parameters/InterviewParameters'
 
 function Chat() {
-    const [messages, setMessages] = useState([]); // Stores both user and AI messages
-    const chatInputFieldRef = useRef(null);
+    const [chatMessages, setChatMessages] = useState([]); // Stores both user and AI messages
+    const [message, setMessage] = useState("");
+    const [started, setStarted] = useState(false);
 
     function handleEnterPress(e){
         if (e.key === "Enter") {
@@ -13,35 +14,44 @@ function Chat() {
         }
       }
 
+    const updateParameters = async (behavior, quality, interviewStyle) => {
+        const parameters = {
+            "beh" : behavior,
+            "quality": quality,
+            "int" : interviewStyle
+        }
+
+        apiSetParameters(parameters);
+        setStarted(true);
+    }
+
 
     const fetchChatResponse = async () => {
-        const userMessage = chatInputFieldRef.current.value;
 
         // Check if the message is empty
-        if (!userMessage) {
+        if (!message) {
             return;  // Stop further execution if message is empty
         }
 
-        chatInputFieldRef.current.value = "";
-
         // Add user message to messages state
-        setMessages(prevMessages => [...prevMessages, { sender: 'user', text: userMessage }]);
+        setChatMessages(prevMessages => [...prevMessages, { sender: 'user', text: message }]);
         
-        const reply = await apiSendMessage(userMessage);
+        const reply = await apiSendMessage(message);
 
-        setMessages(prevMessages => [...prevMessages, { sender: 'ai', text: reply }]);
+        setChatMessages(prevMessages => [...prevMessages, { sender: 'ai', text: reply }]);
     };
 
     return (
         <div className="chat-container-with-parameters">
 
             {/* Chat section */}
-            <div className="chat-section">
+            {
+                started && <div className="chat-section">
                 <div className="chatbox-heading">AI Interview Assistant</div>
                 
                 {/* Messages section */}
                 <div className="chat-messages">
-                    {messages.map((msg, index) => (
+                    {chatMessages.map((msg, index) => (
                         <div 
                             key={index} 
                             className={`chat-message ${msg.sender === 'user' ? 'user-message' : 'ai-message'}`}
@@ -53,13 +63,15 @@ function Chat() {
 
                 {/* Input section */}
                 <div className="chat-input">
-                    <input ref={chatInputFieldRef} type="text" id="user-message" placeholder="Type your message..." />
+                    <input value={message} onChange={(e) => setMessage(e.target.value)} type="text" id="user-message" placeholder="Type your message..." onKeyUp={handleEnterPress}/>
                     <button onClick={fetchChatResponse}>Submit</button>
                 </div>
             </div>
+            }   
+            
             {/* Interview Parameters section */}
             <div className="interview-parameters-section">
-                <InterviewParameters />
+                <InterviewParameters onUpdateParameters={updateParameters}/>
             </div>
         </div>
     );

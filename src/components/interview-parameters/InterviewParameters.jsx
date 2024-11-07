@@ -1,22 +1,14 @@
-import { setParameters as apiSetParameters } from "../api";
+
 import "./InterviewParameters.css";
 import { useEffect, useRef } from "react";
 
-export default function InterviewParameters() {
+export default function InterviewParameters({onUpdateParameters}) {
   const behSelectionRef = useRef(null);
   const qualitySelectionRef = useRef(null);
   const interviewSelectionRef = useRef(null);
 
 
-  const updateParameters = async (behavior, quality, interviewStyle) => {
-    const parameters = {
-      "beh" : behavior,
-      "quality": quality,
-      "int" : interviewStyle
-    }
-
-    apiSetParameters(parameters);
-  }
+  
   
   return (
     <div className="settings-container">
@@ -47,9 +39,9 @@ export default function InterviewParameters() {
         </select>
       </label>
 
-      <button onClick={() => updateParameters(behSelectionRef.current.value, qualitySelectionRef.current.value, interviewSelectionRef.current.value)}
+      <button onClick={() => onUpdateParameters(behSelectionRef.current.value, qualitySelectionRef.current.value, interviewSelectionRef.current.value)}
               >
-                Submit
+                Start
       </button>
     </div>
   );
