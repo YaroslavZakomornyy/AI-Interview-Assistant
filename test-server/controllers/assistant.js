@@ -1,129 +1,84 @@
-require("dotenv").config();
-const endpoint = process.env.ENDPOINT;
+import { AzureOpenAI } from "openai";
+import dotenv from "dotenv";
+import axios from "axios";
+import fs from "fs";
+import path from "path";
+import redisClient from "../redis-client.js";
+import { randomUUID } from "crypto";
+import pdfParse from "pdf-parse";
+
+dotenv.config();
+
+const vectorStoreId = process.env.VECTOR_STORE_ID;
+const endpoint = process.env.ASSISTANT_ENDPOINT;
 const apiKey = process.env.API_KEY;
 const openAiVersion = process.env.AI_VERSION;
 const assistantId = process.env.ASSISTANT_ID;
-if (!apiKey || !endpoint || !openAiVersion || !assistantId) {
+
+
+if (!apiKey || !endpoint || !openAiVersion || !assistantId || !vectorStoreId) {
   throw new Error("Please set API_KEY, ENDPOINT, AI_VERSION and ASSISTANT_ID in your environment variables.");
 }
 
-// import { AzureOpenAI } from "openai";
-
-// let activeThreads = {
-//   "1": ""
-// }
-
-// const getClient = () => {
-//   const assistantsClient = new AzureOpenAI({
-//     endpoint: endpoint,
-//     apiVersion: openAiVersion,
-//     apiKey: apiKey
-//   });
-//   return assistantsClient;
-// };
-
-// const assistant = getClient();
-
-// const createNewThread = async () => {
-//   try {
-//     // Create a thread
-//     const assistantThread = await assistant.beta.threads.create();
-//     console.log(`Thread created: ${JSON.stringify(assistantThread)}`);
-
-//     return assistantThread.id;
-
-//   } catch (error) {
-//     console.error(`Error running the assistant: ${error.message}`);
-//     return -1;
-//   }
-// };
-
-
-
-// const setupAssistant = async () => {
-//   try {
-//     const assistantResponse = await assistant.beta.assistants.retrieve(assistantId)
-//     console.log(`Assistant retrieved: ${JSON.stringify(assistantResponse)}`);
-//   } catch (error) {
-//     console.error(`Error retrieving assistant: ${error.message}`);
-//   }
-// };
-
-// setupAssistant();
-
-// export const sendMessage = async (message) => {
-//     try {
-//         const response = await api.post('/message', {
-//             message
-//         }, {
-//             headers:{
-//                 'Content-Type': 'application/json',
-//                 'X-User-ID': USER_ID  
-//             }
-//         });
-//         return response.data.choices[0].message.content;
-    
-//     } catch (error) {
-
-//         if (error.code === "ERR_NETWORK"){
-//             return "Error! Server refused connection!";
-//         }
-//         else{
-//             console.error('Error:', error);
-//             return "Error! " + error;
-//         }
-        
-//     }
-// };
-
-// app.post('/api/chat/message', async (req, res) => {
+const parse = async (path) => {
+  let dataBuffer = fs.readFileSync(path);
   
+  try{
+    const data = await pdfParse(dataBuffer);
+    console.log(data.text);
+    return data.text;
+  }
+  catch(err){
+    console.error(err);
+    return "";
+  }
+}
 
-//   try{
-//     if (!activeThreads[userId]){
-//       activeThreads[userId] = await createNewThread();
-//     }
-//     const thread = activeThreads[userId];
+const uploadResume = async (req, res) => {
 
-//     if (!thread){
-//       throw new Error("Thread is undefined!");
-//     }
-  
-//     const message = assistant.beta.threads.messages.create(
-//       thread, {
-//         role: 'user',
-//         content: userMessage
-//       }
-//     );
+    console.log(req.file);
 
-    
-//   }
-//   catch(err){
-//     console.error(err);
+    const userId = req.headers['x-user-id'];
+    if (!userId)
+    {
+        return res.status(400).json({ error: 'User ID is required' });
+    }
 
-//     return res.status(500).json({error: 'Internal server error'});
-//   }
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file provided' });
+    }
 
-//   console.log("Message created: ")
-  
-  
-//   // const message = assistant.beta.threads.messages.create(
-//   //     threadId: (await currentThread).id,
+    //uuid will be in the file name created by multer
+    const fileId = path.parse(req.file.filename).name;
 
-//   // )
+    redisClient.push(fileId, {file: req.file, path: req.file.path, user: userId, 
+      fileName: req.file.originalname, type: "resume", uploadedAt: new Date().toISOString()});
 
-//   //   // Make the HTTP request
-//   //   const response = await axios.post(endpoint, payload, { headers });
+    return res.status(201).json({ fileId: fileId });
+}
 
-//   //   context.push(
-//   //     response.data.choices[0].message
-//   //   );
+const feedback = async (req, res) => {
 
-//   //   // Send response back to client
-//   //   res.status(200).json(response.data);
-//   // } catch (error)
-//   // {
-//   //   console.error(error);
-//   //   res.status(500).json({ error: 'Error with OpenAI API' });
-//   // }
-// });
+  const userId = req.headers['x-user-id'];
+  if (!userId)
+  {
+      return res.status(400).json({ error: 'User ID is required' });
+  }
+
+  const fileId = req.params.fileId;
+
+  //Check if it exists
+  if (!redisClient.contains(fileId)){
+    return res.status(404).json({error: 'File not found'});
+  }
+
+  const file = redisClient.get(fileId)[0];
+  const contents = await parse(file.path);
+
+  return res.status(200).json({message: contents});
+}
+
+
+export default {
+  uploadResume, feedback
+}
