@@ -40,7 +40,6 @@ const sendMessage = async (req, res, next) => {
     const history = redisClient.get(userId);
 
     appendNewMessage(history, userMessage, 'user');
-    console.log(history[history.length - 1]);
 
     try
     {
@@ -60,13 +59,13 @@ const sendMessage = async (req, res, next) => {
         // Make the HTTP request
         const response = await axios.post(endpoint, payload, { headers });
 
+        //Store the response
         appendNewMessage(history, response.data.choices[0].message.content, 'assistant');
         redisClient.push(userId, history[history.length - 1]);
 
-        // Send response back to client
+        // Send it back to client
         return res.status(200).json(response.data);
-    } catch (error)
-    {
+    } catch (error) {
         console.error(error);
         return res.status(500).json({ error: 'Error with OpenAI API' });
     }
