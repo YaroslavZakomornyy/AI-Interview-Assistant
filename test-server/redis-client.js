@@ -6,8 +6,7 @@ const redisClient = {
 
     //Pushes element at given key. Creates an array if the key does not exist.
     push(key, item){
-        if (!(this.contains(key))) this.dict[key] = [];
-        this.dict[key].push(item);
+        this.dict[key] = item;
     },
 
     get(key){

@@ -24,7 +24,6 @@ const parse = async (path) => {
     try
     {
         const data = await pdfParse(dataBuffer);
-        console.log(data.text);
         return data.text;
     }
     catch (err)
@@ -60,7 +59,7 @@ const feedback = async (req, res) => {
     [
         {
             "role": "system",
-            "content":"Analyze the provided resume file and give feedback on positive and negative sides of the resume." +
+            "content":"Analyze the provided resume and give feedback on positive and negative sides of the resume." +
                         "Make sure to score the user from 0 to 10 in the following categories: -Style -Consistency -Content and " +
                         "any other categories you find useful. Give tips on how to improve the resume."
             
@@ -70,14 +69,6 @@ const feedback = async (req, res) => {
             "content": contents,
         },
     ]
-
-    // const messages =
-    // [
-    //     {
-    //         "role": "user",
-    //         "content":"Hi!",
-    //     }
-    // ]
     
     const headers = {
         "Content-Type": "application/json",
@@ -94,7 +85,6 @@ const feedback = async (req, res) => {
 
     try{
         const response = await axios.post(endpoint, payload, { headers });
-        console.log(response.data);
         return res.status(200).json({ message: response.data.choices[0].message.content });
     }
     catch (err){

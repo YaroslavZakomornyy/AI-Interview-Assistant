@@ -1,4 +1,4 @@
-import assistantController from '../controllers/files.js';
+import filesController from '../controllers/files.js';
 import multer from 'multer';
 import {v4 as uuidv4} from "uuid";
 import path from "path";
@@ -21,11 +21,7 @@ const storage = multer.diskStorage({
 });
 
 //Require user ID
-router.post('/api/files/resumes', multer({ storage: storage }).single('file'), assistantController.uploadResume);
+router.post('/api/files/resumes', multer({ storage: storage }).single('file'), filesController.uploadResume);
 // router.post('/api/files/job-descriptions', assistantController.uploadDescription);
-
-// router.get('/api/resumes', assistantController.feedback); 
-// router.get('/api/resumes/:fileId', assistantController.feedback);
-// router.delete('/api/resumes/:fileId', assistantController.feedback);
 
 export default router;

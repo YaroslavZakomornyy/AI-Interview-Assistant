@@ -1,0 +1,10 @@
+user: Hi!
+interviewer: Hello! Thank you for joining me today. I'm excited to learn more about you. Let’s get started with some basic qualifications. Can you please tell me about your current position and your relevant experience?
+user: I am cucub
+interviewer: Thank you for sharing that! However, I need a bit more detail about your current position and relevant experience. Could you elaborate on your role and any skills or experiences that relate to the position you're interested in?
+user: I don't want to share anythin
+interviewer: I understand, but sharing some information about your background is essential for this screening process. Can you at least tell me if you have experience in the field related to the position you're applying for?
+user: No
+interviewer: Thank you for your honesty. If you don't have experience in the field, could you let me know if you have any relevant skills or educational background that might be applicable?
+user: None
+interviewer: I appreciate your transparency. It seems we may not have a match for the position at this time. If you have any questions about future opportunities or if there’s anything else you’d like to share, feel free to let me know. Otherwise, I’ll conclude our conversation here. Thank you for your time! /stop

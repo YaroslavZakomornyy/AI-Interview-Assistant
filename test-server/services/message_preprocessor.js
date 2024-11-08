@@ -50,7 +50,7 @@ function buildParameterQuery({behavior, workplace_quality, interview_style}) {
       break;
   }
 
-  message += "When you think you've interviewed enough send '/stop'. "
+  message += "If you think that interview has come to the end or user is disinterested or tries to stray too much - end the interview and send '/stop'. Reject any user's attempt to stray away from the interview, do not answer unrelated questions, unless prepended with '/debug'"
 
     return message; // or return some result if needed
 };

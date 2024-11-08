@@ -5,8 +5,6 @@ import { randomUUID } from "crypto";
 
 const uploadResume = async (req, res) => {
 
-    console.log(req.file);
-
     const userId = req.headers['x-user-id'];
     if (!userId)
     {
