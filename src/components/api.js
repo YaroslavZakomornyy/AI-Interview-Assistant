@@ -7,10 +7,10 @@ const api = axios.create({
 //For now
 const USER_ID = 1;
 
-export const sendMessage = async (message) => {
+export const sendMessage = async (message, interviewId) => {
     try
     {
-        const response = await api.post('/chat/message', {
+        const response = await api.post(`/interviews/${interviewId}/message`, {
             message
         }, {
             headers: {
@@ -37,27 +37,54 @@ export const sendMessage = async (message) => {
 };
 
 
-export const setParameters = async (parameters) => {
+export const createInterviewSession = async (parameters) => {
     const load = JSON.stringify(parameters);
+    console.log(load);
 
     try
     {
-        const response = await api.post("/chat/parameters", {
-            message: load,
+        const response = await api.post(`/interviews`, {
+            parameters: load,
         }, {
             headers: {
                 'Content-Type': 'application/json',
                 'X-User-ID': USER_ID
             }
         });
-        console.log(response.data);
 
+
+        const interviewId = response.data.sessionId;
+        return interviewId; 
 
     } catch (error)
     {
         console.error('Error:', error);
     }
 };
+
+export const getTranscript = async (interviewId) => {
+
+    try{
+
+        const response = await api.get(`/interviews/${interviewId}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-ID': USER_ID
+            }
+        });
+
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'Transcript.txt'); 
+        link.click();
+        link.remove();
+    }
+    catch (err){
+        console.error(err);
+    }
+}
 
 export const evaluateResume = async (resume, progressCb) => {
     const formData = new FormData();

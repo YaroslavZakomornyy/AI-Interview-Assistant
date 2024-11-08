@@ -2,13 +2,10 @@
 import "./InterviewParameters.css";
 import { useEffect, useRef } from "react";
 
-export default function InterviewParameters({onUpdateParameters}) {
+export default function InterviewParameters({onStart}) {
   const behSelectionRef = useRef(null);
   const qualitySelectionRef = useRef(null);
   const interviewSelectionRef = useRef(null);
-
-
-  
   
   return (
     <div className="settings-container">
@@ -39,7 +36,7 @@ export default function InterviewParameters({onUpdateParameters}) {
         </select>
       </label>
 
-      <button onClick={() => onUpdateParameters(behSelectionRef.current.value, qualitySelectionRef.current.value, interviewSelectionRef.current.value)}
+      <button onClick={() => onStart(behSelectionRef.current.value, qualitySelectionRef.current.value, interviewSelectionRef.current.value)}
               >
                 Start
       </button>

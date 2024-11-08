@@ -1,11 +1,13 @@
-import { sendMessage as apiSendMessage, setParameters as apiSetParameters } from './api';
+import { sendMessage as apiSendMessage, 
+    createInterviewSession as apiCreateInterviewSession, getTranscript as apiGetTranscript} from './api.js';
 import { useState } from 'react';
 import './Chat.css';
 import InterviewParameters from './interview-parameters/InterviewParameters'
 
 function Chat() {
     const [chatMessages, setChatMessages] = useState([]); // Stores both user and AI messages
-    const [message, setMessage] = useState("");
+    const [currentInterviewSession, setCurrentInterviewSession] = useState(null);
+    const [userInput, setUserInput] = useState("");
     const [started, setStarted] = useState(false);
 
     function handleEnterPress(e){
@@ -14,29 +16,36 @@ function Chat() {
         }
       }
 
-    const updateParameters = async (behavior, quality, interviewStyle) => {
+    const startInterview = async (behavior, quality, interviewStyle) => {
         const parameters = {
             "beh" : behavior,
             "quality": quality,
             "int" : interviewStyle
         }
 
-        apiSetParameters(parameters);
+        setCurrentInterviewSession(await apiCreateInterviewSession(parameters));
         setStarted(true);
     }
 
+    const getTranscript = async () => {
+        if (!currentInterviewSession) return;
+
+        apiGetTranscript(currentInterviewSession);
+    }
 
     const fetchChatResponse = async () => {
-
         // Check if the message is empty
-        if (!message) {
-            return;  // Stop further execution if message is empty
+        if (!userInput) {
+            return;
         }
+
+        const message = userInput;
 
         // Add user message to messages state
         setChatMessages(prevMessages => [...prevMessages, { sender: 'user', text: message }]);
+        setUserInput("");
         
-        const reply = await apiSendMessage(message);
+        const reply = await apiSendMessage(message, currentInterviewSession);
 
         setChatMessages(prevMessages => [...prevMessages, { sender: 'ai', text: reply }]);
     };
@@ -63,15 +72,19 @@ function Chat() {
 
                 {/* Input section */}
                 <div className="chat-input">
-                    <input value={message} onChange={(e) => setMessage(e.target.value)} type="text" id="user-message" placeholder="Type your message..." onKeyUp={handleEnterPress}/>
+                    <input value={userInput} onChange={(e) => setUserInput(e.target.value)} type="text" id="user-message" placeholder="Type your message..." onKeyUp={handleEnterPress}/>
                     <button onClick={fetchChatResponse}>Submit</button>
+                </div>
+                <div className="chat-input">
+                    {/* <input value={userInput} onChange={(e) => setUserInput(e.target.value)} type="text" id="user-message" placeholder="Type your message..." onKeyUp={handleEnterPress}/> */}
+                    <button onClick={getTranscript}>Get transcript</button>
                 </div>
             </div>
             }   
             
             {/* Interview Parameters section */}
             <div className="interview-parameters-section">
-                <InterviewParameters onUpdateParameters={updateParameters}/>
+                <InterviewParameters onStart={startInterview}/>
             </div>
         </div>
     );
