@@ -1,9 +1,10 @@
 import path from "path";
 import redisClient from "../redis-client.js";
 import { randomUUID } from "crypto";
+import fs from "fs";
 
 
-const uploadResume = async (req, res) => {
+const upload = async (req, res) => {
 
     const userId = req.headers['x-user-id'];
     if (!userId)
@@ -18,12 +19,33 @@ const uploadResume = async (req, res) => {
     //uuid will be in the file name created by multer
     const fileId = path.parse(req.file.filename).name;
 
-    redisClient.push(fileId, {file: req.file, path: req.file.path, user: userId, 
+    redisClient.push(fileId, {path: req.file.path, user: userId, 
       fileName: req.file.originalname, type: "resume", uploadedAt: new Date().toISOString()});
 
     return res.status(201).json({ fileId: fileId });
 }
 
+const remove = async (req, res) => {
+    const userId = req.headers['x-user-id'];
+    if (!userId)
+    {
+        return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const fileId = req.params['fileId'];
+
+    if (!redisClient.contains(fileId)) return res.status(404).json({message: "File not found"});
+
+    fs.unlink(redisClient.get(fileId).path, (err) => {
+      if (err){
+        console.error("Error deleting the file.");
+        return res.sendStatus(500);
+      }
+    })
+
+    return res.sendStatus(200);
+}
+
 export default {
-  uploadResume
+  upload, remove
 }
