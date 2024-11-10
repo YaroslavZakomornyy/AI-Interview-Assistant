@@ -8,7 +8,7 @@ import pdfParse from "pdf-parse";
 
 dotenv.config();
 
-const endpoint = process.env.CHAT_COMPLETION_ENDPOINT;
+const endpoint = process.env.ENDPOINT;
 const apiKey = process.env.API_KEY;
 
 

@@ -1,0 +1,19 @@
+.feedback-menu {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #eef2ff;
+    border-radius: 5px;
+}
+  
+.feedback-category {
+margin-bottom: 15px;
+}
+
+.feedback-category h3 {
+font-size: 1.2em;
+color: #333;
+}
+
+.feedback-category p {
+margin: 5px 0;
+}
