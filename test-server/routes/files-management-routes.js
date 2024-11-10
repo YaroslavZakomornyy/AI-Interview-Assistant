@@ -21,7 +21,8 @@ const storage = multer.diskStorage({
 });
 
 //Require user ID
-router.post('/api/files/resumes', multer({ storage: storage }).single('file'), filesController.uploadResume);
+router.post('/api/files', multer({ storage: storage }).single('file'), filesController.upload);
+router.delete(`/api/files/:fileId`, filesController.remove);
 // router.post('/api/files/job-descriptions', assistantController.uploadDescription);
 
 export default router;

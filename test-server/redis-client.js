@@ -9,6 +9,10 @@ const redisClient = {
         this.dict[key] = item;
     },
 
+    remove(key){
+        delete this.dict[key];
+    },
+
     get(key){
         if (!(this.contains)) throw new Error(`key ${key} does not exist`);
         return this.dict[key];
