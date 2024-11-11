@@ -10,6 +10,8 @@ function HomePage() {
       <Link to="/chat" className="button">Interview Simulation</Link>
       <p></p>
       <Link to="/resume" className="button">Resume Analysis</Link>
+      <p></p>
+      <Link to="/resume" className="button">Past Feedback</Link>
     </div>
   );
 }
