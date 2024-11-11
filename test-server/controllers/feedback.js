@@ -37,12 +37,6 @@ const parse = async (path) => {
 
 const feedback = async (req, res) => {
 
-    const userId = req.headers['x-user-id'];
-    if (!userId)
-    {
-        return res.status(400).json({ error: 'User ID is required' });
-    }
-
     const fileId = req.params.fileId;
 
     //Check if it exists

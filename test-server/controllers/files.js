@@ -6,12 +6,6 @@ import fs from "fs";
 
 const upload = async (req, res) => {
 
-    const userId = req.headers['x-user-id'];
-    if (!userId)
-    {
-        return res.status(400).json({ error: 'User ID is required' });
-    }
-
     if (!req.file) {
         return res.status(400).json({ error: 'No file provided' });
     }
@@ -19,18 +13,13 @@ const upload = async (req, res) => {
     //uuid will be in the file name created by multer
     const fileId = path.parse(req.file.filename).name;
 
-    redisClient.push(fileId, {path: req.file.path, user: userId, 
+    redisClient.push(fileId, {path: req.file.path, user: req.userId, 
       fileName: req.file.originalname, type: "resume", uploadedAt: new Date().toISOString()});
 
     return res.status(201).json({ fileId: fileId });
 }
 
 const remove = async (req, res) => {
-    const userId = req.headers['x-user-id'];
-    if (!userId)
-    {
-        return res.status(400).json({ error: 'User ID is required' });
-    }
 
     const fileId = req.params['fileId'];
 

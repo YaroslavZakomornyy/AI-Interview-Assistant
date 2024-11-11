@@ -5,6 +5,7 @@ import feedbackRoutes from './routes/feedback-routes.js';
 import fileManagementRoutes from './routes/files-management-routes.js';
 import { dirname} from 'path';
 import { fileURLToPath } from 'url';
+import { error } from 'console';
 
 const app = express();
 app.use(cors());
@@ -23,6 +24,15 @@ app.use(function(req, res, next){
 
 //This is a very specific order. json() middleware interferes with multer,
 //so we have to use these routes earlier than json()
+app.use(function(req, res, next){
+    const userId = req.headers['x-user-id'];
+    
+    if (!userId) return res.sendStatus(401);
+
+    req.userId = userId;
+
+    next();
+});
 app.use(feedbackRoutes);
 app.use(interviewRoutes);
 app.use(fileManagementRoutes);

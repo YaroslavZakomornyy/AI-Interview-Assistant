@@ -21,13 +21,6 @@ const appendNewMessage = (messageHistory, newMessage, role) => {
 
 //user's message
 const sendMessage = async (req, res, next) => {
-    const userId = req.headers['x-user-id'];
-
-    if (!userId)
-    {
-        return res.status(400).json({ error: 'User ID is required' });
-    }
-
     const userMessage = req.body.message;
     if (!userMessage)
     {
@@ -36,12 +29,13 @@ const sendMessage = async (req, res, next) => {
 
     const interviewId = req.params['interviewId'];
 
+    //Get the history and append a new message to it
     const history = redisClient.get(interviewId);
-    fs.appendFileSync(`${global.appRoot}/transcripts/${userId}/${interviewId}`, `user: ${userMessage}\n`);
-
-
-    //store transcript file inside
+    
     appendNewMessage(history.history, userMessage, 'user');
+
+    //Write the user message to the log
+    fs.appendFileSync(`${global.appRoot}/transcripts/${req.userId}/${interviewId}`, `user: ${userMessage}\n`);
 
     try
     {
@@ -62,13 +56,15 @@ const sendMessage = async (req, res, next) => {
 
         //Send a message and wait for the reply
         const response = await axios.post(endpoint, payload, { headers });
-        fs.appendFileSync(`${global.appRoot}/transcripts/${userId}/${interviewId}`, `interviewer: ${response.data.choices[0].message.content}\n`);
+
+        //Write the AI message to the log
+        fs.appendFileSync(`${global.appRoot}/transcripts/${req.userId}/${interviewId}`, `interviewer: ${response.data.choices[0].message.content}\n`);
 
         //Append the reply to the message history
         appendNewMessage(history.history, response.data.choices[0].message.content, 'assistant');
 
 
-        redisClient.push(userId, { owner: userId, history: history });
+        redisClient.push(req.userId, { owner: req.userId, history: history });
 
         // Send it back to client
         return res.status(200).json(response.data);
@@ -81,12 +77,6 @@ const sendMessage = async (req, res, next) => {
 
 
 const create = async (req, res) => {
-    const userId = req.headers['x-user-id'];
-
-    if (!userId)
-    {
-        return res.status(400).json({ error: 'User ID is required' });
-    }
 
     const parameters = await JSON.parse(req.body.parameters || "");
 
@@ -95,8 +85,8 @@ const create = async (req, res) => {
         return res.status(400).json({ error: 'Some parameters are missing.' });
     }
 
-    if (!fs.existsSync(`${global.appRoot}/transcripts/${userId}`)){
-        fs.mkdirSync(`${global.appRoot}/transcripts/${userId}`);
+    if (!fs.existsSync(`${global.appRoot}/transcripts/${req.userId}`)){
+        fs.mkdirSync(`${global.appRoot}/transcripts/${req.userId}`);
     }
 
     const message = buildParameterQuery({
@@ -115,25 +105,19 @@ const create = async (req, res) => {
     //Generate session id and push it
     const sessionId = randomUUID();
 
-    redisClient.push(sessionId, { owner: userId, history: [params] });
+    redisClient.push(sessionId, { owner: req.userId, history: [params] });
     // console.log(redisClient.get(sessionId));
 
     return res.status(201).json({ sessionId: sessionId });
 }
 
 const transcript = async (req, res) => {
-    const userId = req.headers['x-user-id'];
-
-    if (!userId)
-    {
-        return res.status(400).json({ error: 'User ID is required' });
-    }
 
     const interviewId = req.params['interviewId'];
 
     // const history = fs.readFileSync();
 
-    return res.status(200).sendFile(`${global.appRoot}/transcripts/${userId}/${interviewId}`);
+    return res.status(200).sendFile(`${global.appRoot}/transcripts/${req.userId}/${interviewId}`);
 }
 
 export default {
