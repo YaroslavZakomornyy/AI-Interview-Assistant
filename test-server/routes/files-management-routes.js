@@ -11,7 +11,7 @@ const storage = multer.diskStorage({
 
     // Specify the folder to save the files
     destination: function (req, file, cb) {
-        cb(null, './uploads'); 
+        cb(null, './data/uploads'); 
     },
     filename: function (req, file, cb) {
         // Create a unique filename
@@ -23,6 +23,5 @@ const storage = multer.diskStorage({
 //Require user ID
 router.post('/api/files', multer({ storage: storage }).single('file'), filesController.upload);
 router.delete(`/api/files/:fileId`, filesController.remove);
-// router.post('/api/files/job-descriptions', assistantController.uploadDescription);
 
 export default router;

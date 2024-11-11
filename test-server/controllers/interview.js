@@ -35,7 +35,7 @@ const sendMessage = async (req, res, next) => {
     appendNewMessage(history.history, userMessage, 'user');
 
     //Write the user message to the log
-    fs.appendFileSync(`${global.appRoot}/transcripts/${req.userId}/${interviewId}`, `user: ${userMessage}\n`);
+    fs.appendFileSync(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}`, `user: ${userMessage}\n`);
 
     try
     {
@@ -58,7 +58,7 @@ const sendMessage = async (req, res, next) => {
         const response = await axios.post(endpoint, payload, { headers });
 
         //Write the AI message to the log
-        fs.appendFileSync(`${global.appRoot}/transcripts/${req.userId}/${interviewId}`, `interviewer: ${response.data.choices[0].message.content}\n`);
+        fs.appendFileSync(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}`, `interviewer: ${response.data.choices[0].message.content}\n`);
 
         //Append the reply to the message history
         appendNewMessage(history.history, response.data.choices[0].message.content, 'assistant');
@@ -85,8 +85,8 @@ const create = async (req, res) => {
         return res.status(400).json({ error: 'Some parameters are missing.' });
     }
 
-    if (!fs.existsSync(`${global.appRoot}/transcripts/${req.userId}`)){
-        fs.mkdirSync(`${global.appRoot}/transcripts/${req.userId}`);
+    if (!fs.existsSync(`${global.appRoot}/data/transcripts/${req.userId}`)){
+        fs.mkdirSync(`${global.appRoot}/data/transcripts/${req.userId}`);
     }
 
     const message = buildParameterQuery({
@@ -117,7 +117,7 @@ const transcript = async (req, res) => {
 
     // const history = fs.readFileSync();
 
-    return res.status(200).sendFile(`${global.appRoot}/transcripts/${req.userId}/${interviewId}`);
+    return res.status(200).sendFile(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}`);
 }
 
 export default {
