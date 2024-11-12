@@ -8,9 +8,9 @@ const router = express.Router();
 
 router.use(json());
 
-router.post('/api/interviews', interviewController.create);  //Creates an interview session
-router.get('/api/interviews/:interviewId', interviewController.transcript); //Returns current transcript of the interview
-router.post('/api/interviews/:interviewId/message', interviewController.sendMessage);
+router.post('/v1/interviews', interviewController.create);  //Creates an interview session
+router.get('/v1/interviews/:interviewId', interviewController.transcript); //Returns details of the interview
+router.post('/v1/interviews/:interviewId/message', interviewController.sendMessage); //Send a message
 // router.get('/api/interviews/:interviewId/details', interviewController.details); //Returns parameters of the interview
 
 router.use(json());

@@ -20,8 +20,11 @@ const storage = multer.diskStorage({
     }
 });
 
-//Require user ID
-router.post('/api/files', multer({ storage: storage }).single('file'), filesController.upload);
-router.delete(`/api/files/:fileId`, filesController.remove);
+
+router.post('/v1/files', multer({ storage: storage }).single('file'), filesController.upload); //Upload a file
+router.get('/v1/files/meta', multer({ storage: storage }).single('file'), filesController.upload); //Get metadata of all user's files
+router.get('/v1/files/:fileId', filesController.upload); //Download a particular file
+router.get('/v1/files/:fileId/meta', filesController.upload); //Get metadata of a particular file
+router.delete(`/v1/files/:fileId`, filesController.remove); //Delete a particular file
 
 export default router;

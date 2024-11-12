@@ -3,7 +3,7 @@ import express, { json } from 'express';
 
 const router = express.Router();
 
-router.get('/api/resumes/:fileId/feedback', feedbackController.feedback);
+router.get('/v1/feedback/resumes/:fileId', feedbackController.feedback);
 // router.get('/api/feedback', assistantController.feedback);
 
 
