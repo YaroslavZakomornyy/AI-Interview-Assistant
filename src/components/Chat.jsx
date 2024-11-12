@@ -12,6 +12,8 @@ function Chat() {
     const [started, setStarted] = useState(false);
     const navigate = useNavigate();
 
+    const MAX_CHARS = 500;
+
     function handleEnterPress(e){
         if (e.key === "Enter") {
             fetchChatResponse();
@@ -35,20 +37,26 @@ function Chat() {
         apiGetTranscript(currentInterviewSession);
     }
 
+    const handleInputChange = (e) => {
+        const input = e.target.value;
+        if (input.length <= MAX_CHARS) {
+            setUserInput(input);
+        }
+    };
+
     const fetchChatResponse = async () => {
         // Check if the message is empty
         if (!userInput) {
             return;
         }
 
-        const message = userInput;
-
+        const message = userInput.slice(0, MAX_CHARS);
         // Add user message to messages state
         setChatMessages(prevMessages => [...prevMessages, { sender: 'user', text: message }]);
         setUserInput("");
         
         const reply = await apiSendMessage(message, currentInterviewSession);
-
+        const limitedReply = reply.slice(0, MAX_CHARS);
         setChatMessages(prevMessages => [...prevMessages, { sender: 'ai', text: reply }]);
     };
 
@@ -73,15 +81,29 @@ function Chat() {
                 </div>
 
                 {/* Input section */}
-                <div className="chat-input">
-                    <input value={userInput} onChange={(e) => setUserInput(e.target.value)} type="text" id="user-message" placeholder="Type your message..." onKeyUp={handleEnterPress}/>
-                    <button onClick={fetchChatResponse}>Submit</button>
-                </div>
                 
-                <div className="chat-input">
-                    {/* <input value={userInput} onChange={(e) => setUserInput(e.target.value)} type="text" id="user-message" placeholder="Type your message..." onKeyUp={handleEnterPress}/> */}
-                    <button onClick={getTranscript}>Get transcript</button>
-                </div>
+                <div className="chat-input-wrapper">
+                        <textarea
+                            value={userInput}
+                            onChange={handleInputChange}
+                            className="chat-textarea"
+                            placeholder="Type your message..."
+                            onKeyDown={handleEnterPress}
+                        />
+                        <div className="chat-input-footer">
+                            <span className="char-counter">
+                                {MAX_CHARS - userInput.length} characters remaining
+                            </span>
+                            <div className="chat-buttons">
+                                <button className="transcript-button" onClick={getTranscript}>
+                                    Get transcript
+                                </button>
+                                <button className="submit-button" onClick={fetchChatResponse}>
+                                    Submit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
             </div>
             }   
             
