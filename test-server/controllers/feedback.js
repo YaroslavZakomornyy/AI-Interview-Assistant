@@ -2,7 +2,6 @@ import { AzureOpenAI } from "openai";
 import dotenv from "dotenv";
 import axios from "axios";
 import fs from "fs";
-import path from "path";
 import redisClient from "../redis-client.js";
 import pdfParse from "pdf-parse";
 

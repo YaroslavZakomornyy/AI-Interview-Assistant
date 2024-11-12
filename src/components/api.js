@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:3000/api',  // Replace with your server's URL
+    baseURL: 'http://localhost:3000/api/v1',  // Replace with your server's URL
 });
 
 //For now
@@ -66,7 +66,7 @@ export const getTranscript = async (interviewId) => {
 
     try{
 
-        const response = await api.get(`/interviews/${interviewId}`, {
+        const response = await api.get(`/files/${interviewId}`, {
             headers: {
                 'Content-Type': 'application/json',
                 'X-User-ID': USER_ID
@@ -96,7 +96,7 @@ export const evaluateResume = async (resume, progressCb) => {
         if(progressCb && typeof progressCb === "function") progressCb("Uploading");
 
         //Upload the resume
-        let response = await api.post("/files/resumes", formData,
+        let response = await api.post("/files", formData,
             {
                 headers: {
                     'x-user-id': USER_ID

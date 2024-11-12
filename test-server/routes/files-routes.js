@@ -1,6 +1,6 @@
 import filesController from '../controllers/files.js';
 import multer from 'multer';
-import {v4 as uuidv4} from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import express, { json } from 'express';
 
@@ -11,7 +11,7 @@ const storage = multer.diskStorage({
 
     // Specify the folder to save the files
     destination: function (req, file, cb) {
-        cb(null, './data/uploads'); 
+        cb(null, './data/uploads');
     },
     filename: function (req, file, cb) {
         // Create a unique filename

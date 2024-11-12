@@ -2,12 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import interviewRoutes from './routes/interview-routes.js';
 import feedbackRoutes from './routes/feedback-routes.js';
-import fileManagementRoutes from './routes/files-management-routes.js';
+import fileManagementRoutes from './routes/files-routes.js';
 import { dirname} from 'path';
 import { fileURLToPath } from 'url';
-import { error } from 'console';
+
 
 const app = express();
+const router = express.Router();
 app.use(cors());
 
 //Getting the root
@@ -22,20 +23,22 @@ app.use(function(req, res, next){
     next();
 });
 
-//This is a very specific order. json() middleware interferes with multer,
-//so we have to use these routes earlier than json()
+
 app.use(function(req, res, next){
     const userId = req.headers['x-user-id'];
     
     if (!userId) return res.sendStatus(401);
 
     req.userId = userId;
-
     next();
 });
-app.use(feedbackRoutes);
-app.use(interviewRoutes);
-app.use(fileManagementRoutes);
+
+
+router.use(feedbackRoutes);
+router.use(interviewRoutes);
+router.use(fileManagementRoutes);
+
+app.use("/api", router);
 
 //Oops, missed route
 app.get('*', (req, res) => {
