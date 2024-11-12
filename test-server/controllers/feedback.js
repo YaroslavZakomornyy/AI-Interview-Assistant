@@ -8,21 +8,20 @@ import pdfParse from "pdf-parse";
 
 dotenv.config();
 
-const endpoint = process.env.ENDPOINT;
+const endpoint = process.env.CHAT_COMPLETION_ENDPOINT;
 const apiKey = process.env.API_KEY;
 
 
 if (!apiKey || !endpoint)
 {
-    throw new Error("Please set API_KEY, ENDPOINT, AI_VERSION and ASSISTANT_ID in your environment variables.");
+    throw new Error("Please set API_KEY and ENDPOINT in your environment variables.");
 }
 
 
 const parse = async (path) => {
-    let dataBuffer = fs.readFileSync(path);
-
     try
     {
+        let dataBuffer = fs.readFileSync(path);
         const data = await pdfParse(dataBuffer);
         return data.text;
     }
@@ -45,8 +44,14 @@ const feedback = async (req, res) => {
         return res.status(404).json({ error: 'File not found' });
     }
 
-    const file = redisClient.get(fileId)[0];
+    const file = redisClient.get(fileId);
 
+    if (!file){
+        console.log("file for feedback is not found");
+        return res.sendStatus(500);
+    }
+
+    console.log(file);
     const contents = await parse(file.path);
 
     const messages =
@@ -79,6 +84,7 @@ const feedback = async (req, res) => {
 
     try{
         const response = await axios.post(endpoint, payload, { headers });
+        // console.log(response);
         return res.status(200).json({ message: response.data.choices[0].message.content });
     }
     catch (err){

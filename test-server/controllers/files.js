@@ -1,6 +1,5 @@
 import path from "path";
 import redisClient from "../redis-client.js";
-import { randomUUID } from "crypto";
 import fs from "fs";
 
 
@@ -12,9 +11,18 @@ const upload = async (req, res) => {
 
     //uuid will be in the file name created by multer
     const fileId = path.parse(req.file.filename).name;
+    const filePath = path.normalize(`${global.appRoot}/${req.file.path}`);
 
-    redisClient.push(fileId, {path: req.file.path, user: req.userId, 
-      fileName: req.file.originalname, type: "resume", uploadedAt: new Date().toISOString()});
+    await redisClient.hSet(`resumes:${fileId}`, {
+      path: filePath, 
+      user: req.userId, 
+      fileName: req.file.originalname, 
+      type: "resume", 
+      uploadedAt: new Date().toISOString()
+    })
+
+    // redisClient.push(fileId, {path: filePath, user: req.userId, 
+    //   fileName: req.file.originalname, type: "resume", uploadedAt: new Date().toISOString()});
 
     return res.status(201).json({ fileId: fileId });
 }

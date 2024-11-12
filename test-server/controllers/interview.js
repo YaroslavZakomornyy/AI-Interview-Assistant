@@ -30,9 +30,14 @@ const sendMessage = async (req, res, next) => {
     const interviewId = req.params['interviewId'];
 
     //Get the history and append a new message to it
-    const history = redisClient.get(interviewId);
+    // const history = redisClient.get(interviewId);
+    // const interviewOwner = await redisClient.hGet(`interviews:${interviewId}`, 'owner');
+
+
+    const currentSessionData = await redisClient.hGet(`interviews:${interviewId}`, 'history');
+    const history = JSON.parse(currentSessionData.history);
     
-    appendNewMessage(history.history, userMessage, 'user');
+    appendNewMessage(history, userMessage, 'user');
 
     //Write the user message to the log
     fs.appendFileSync(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}`, `user: ${userMessage}\n`);
@@ -46,7 +51,7 @@ const sendMessage = async (req, res, next) => {
 
         // Request payload
         const payload = {
-            "messages": history.history,
+            "messages": history,
             "temperature": 0.7,
             "top_p": 0.95,
             "max_tokens": 200
@@ -61,10 +66,13 @@ const sendMessage = async (req, res, next) => {
         fs.appendFileSync(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}`, `interviewer: ${response.data.choices[0].message.content}\n`);
 
         //Append the reply to the message history
-        appendNewMessage(history.history, response.data.choices[0].message.content, 'assistant');
+        appendNewMessage(history, response.data.choices[0].message.content, 'assistant');
 
-
-        redisClient.push(req.userId, { owner: req.userId, history: history });
+        await redisClient.hSet(`interviews:${interviewId}`, {
+            owner: req.userId,
+            history: JSON.stringify(history)
+        });
+        // redisClient.push(req.userId, { owner: req.userId, history: history });
 
         // Send it back to client
         return res.status(200).json(response.data);
@@ -102,13 +110,18 @@ const create = async (req, res) => {
         }
     ;
 
-    //Generate session id and push it
+    //Generate a session id and push it
     const sessionId = randomUUID();
+    
+    await redisClient.hSet(`interviews:${sessionId}`, {
+        owner: req.userId,
+        history: JSON.stringify([params]),
+    });
 
-    redisClient.push(sessionId, { owner: req.userId, history: [params] });
+    // redisClient.push(sessionId, { owner: req.userId, history: [params] });
     // console.log(redisClient.get(sessionId));
 
-    return res.status(201).json({ sessionId: sessionId });
+    return res.status(201).json({ sessionId: sessionId});
 }
 
 const transcript = async (req, res) => {
