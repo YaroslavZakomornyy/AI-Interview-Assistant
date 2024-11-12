@@ -20,7 +20,7 @@ DELETE /users/{userId}
 
 Upload a file:
 ```
-POST api/v1/files/
+POST api/v1/files
 ```
 Download a file:
 ```
