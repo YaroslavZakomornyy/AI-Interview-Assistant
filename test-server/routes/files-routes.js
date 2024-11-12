@@ -21,10 +21,22 @@ const storage = multer.diskStorage({
 });
 
 
-router.post('/v1/files', multer({ storage: storage }).single('file'), filesController.upload); //Upload a file
-router.get('/v1/files/meta', multer({ storage: storage }).single('file'), filesController.upload); //Get metadata of all user's files
+// File filter function to allow only .pdf files
+const fileFilter = (req, file, cb) => {
+    // Check the file extension and mime type
+    if (path.extname(file.originalname).toLowerCase() === '.pdf' && file.mimetype === 'application/pdf') {
+        cb(null, true); // Accept the file
+    } else {
+        cb(new Error('Only .pdf files are allowed'), false); // Reject the file
+    }
+};
+
+
+
+router.post('/v1/files', multer({ storage: storage, fileFilter: fileFilter }).single('file'), filesController.upload); //Upload a file
+router.get('/v1/files/meta', filesController.requestMetaAll); //Get metadata of all user's files
 router.get('/v1/files/:fileId', filesController.upload); //Download a particular file
-router.get('/v1/files/:fileId/meta', filesController.upload); //Get metadata of a particular file
+router.get('/v1/files/:fileId/meta', filesController.requestMeta); //Get metadata of a particular file
 router.delete(`/v1/files/:fileId`, filesController.remove); //Delete a particular file
 
 export default router;
