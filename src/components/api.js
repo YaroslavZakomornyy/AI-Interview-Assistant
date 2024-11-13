@@ -110,7 +110,7 @@ export const evaluateResume = async (resume, progressCb) => {
         if(progressCb && typeof progressCb === "function") progressCb("Evaluating")
 
         //Get the feedback for it
-        response = await api.get(`/resumes/${fileId}/feedback`,
+        response = await api.get(`feedback/resumes/${fileId}`,
             {
                 headers: {
                     'x-user-id': USER_ID
