@@ -17,6 +17,7 @@ const cacheFile = async (userId, id, filePath, name, type) => {
         await redisClient.hSet(`files:${userId}:${id}`, {
             path: path.normalize(filePath),
             fileName: name,
+            fileId: id,
             type: type,
             uploadedAt: new Date().toISOString()
         });
@@ -29,11 +30,13 @@ const cacheFile = async (userId, id, filePath, name, type) => {
 
 const getMetaData = async (userId, fileId) => {
 
+    //Not retrieving the fileId since it is already passed
     const metaData = await redisClient.HMGET(`files:${userId}:${fileId}`, ["fileName", "type", "uploadedAt"]);
     
     //Map the array to the object
     const structData = {
         fileName: metaData[0],
+        fileId: fileId,
         type: metaData[1],
         uploadedAt: metaData[2]
     }
@@ -42,13 +45,14 @@ const getMetaData = async (userId, fileId) => {
 }
 
 const getMetaDataWithKey = async (key) => {
-    const metaData = await redisClient.HMGET(key, ["fileName", "type", "uploadedAt"]);
+    const metaData = await redisClient.HMGET(key, ["fileName", "fileId", "type", "uploadedAt"]);
     
     //Map the array to the object
     const structData = {
         fileName: metaData[0],
         type: metaData[1],
-        uploadedAt: metaData[2]
+        fileId: metaData[2],
+        uploadedAt: metaData[3]
     }
 
     return structData;
