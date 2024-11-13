@@ -68,10 +68,40 @@ GET /api/v1/feedback/resumes/{fileId}
 ## Upload File
 Upload a file to the server. Allowed types: .pdf
 
+### Authentication
+Required
+
 ### URL
 POST `/api/v1/files`
 
 ### Request Form
 |Parameter|Type|Description|Requirement|
 |---|---|---|---|
-|
+|file|file|A file to upload|Required|
+
+
+### Response Parameters
+|Parameter|Type|Description|
+|---|---|---|
+|fileId|string|An ID of uploaded file|
+
+
+## Download File
+Download a file from the server. Will return 404 if not authorized
+
+### Authentication
+Required
+
+### URL
+GET `/api/v1/files/{fileId}`
+
+### Request Data
+|Parameter|Type|Description|Requirement|
+|---|---|---|---|
+|fileId|string|An id of a requested file|Required|
+
+
+### Response
+|Parameter|Type|Description|
+|---|---|---|
+|---|---|---|
