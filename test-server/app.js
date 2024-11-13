@@ -25,8 +25,8 @@ app.use(function(req, res, next){
 
 
 app.use(function(req, res, next){
-    const userId = req.headers['x-user-id'];
-    
+    const userId = req.headers['x-user-id'] || req.query.userId;
+
     if (!userId) return res.sendStatus(401);
 
     req.userId = userId;
