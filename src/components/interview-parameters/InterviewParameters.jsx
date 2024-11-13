@@ -28,13 +28,21 @@ export default function InterviewParameters({onStart}) {
         </select>
 
       {/* Interviewer type */}
-      <label htmlFor="interview-type-drop-down">Interview style
+      <label htmlFor="interview-type-drop-down">Interview style</label>
         <select name="company-rating" id="interview-type-drop-down" ref={interviewSelectionRef}>
           <option value="rec">Recruiter (High-level)</option>
           <option value="eng">Engineer (Technical)</option>
           <option value="hr">Hiring Manager (Behavioral)</option>
         </select>
-      </label>
+
+      {/* Job Description */}
+      <label htmlFor="job-description">Job description</label>
+      <textarea 
+        id="job-description"
+        // ref={jobDescriptionRef}
+        className="job-description-input"
+        placeholder="Paste job description here..."
+      />
 
       <button onClick={() => onStart(behSelectionRef.current.value, qualitySelectionRef.current.value, interviewSelectionRef.current.value)}
               >
