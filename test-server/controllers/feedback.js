@@ -32,18 +32,18 @@ const parse = async (path) => {
 }
 
 
-
+//TODO: FIX
 const feedback = async (req, res) => {
 
-    const fileId = req.params.fileId;
+    const fileId = req.params["fileId"];
 
     //Check if it exists
-    if (!redisClient.contains(fileId))
+    if (!redisClient.exists(`files:${req.userId}:${fileId}`))
     {
         return res.status(404).json({ error: 'File not found' });
     }
 
-    const file = redisClient.get(fileId);
+    const file = await redisClient.hGet(`files:${req.userId}:${fileId}`, "path");
 
     if (!file){
         console.log("file for feedback is not found");
@@ -51,7 +51,7 @@ const feedback = async (req, res) => {
     }
 
     console.log(file);
-    const contents = await parse(file.path);
+    const contents = await parse(file);
 
     const messages =
     [

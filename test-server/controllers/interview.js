@@ -3,12 +3,18 @@ import axios from "axios";
 import redisClient from "../redis-client.js";
 import buildParameterQuery from "../services/message_preprocessor.js";
 import { randomUUID } from "crypto";
+import filesService from "../services/files-service.js";
 import fs from "fs";
 
 dotenv.config();
 
 const apiKey = process.env.API_KEY;
 const endpoint = process.env.CHAT_COMPLETION_ENDPOINT;
+
+if (!apiKey || !endpoint)
+{
+    throw new Error("Please set API_KEY and ENDPOINT in your environment variables.");
+}
 
 const appendNewMessage = (messageHistory, newMessage, role) => {
     messageHistory.push(
@@ -28,19 +34,14 @@ const sendMessage = async (req, res, next) => {
     }
 
     const interviewId = req.params['interviewId'];
-
-    //Get the history and append a new message to it
-    // const history = redisClient.get(interviewId);
-    // const interviewOwner = await redisClient.hGet(`interviews:${interviewId}`, 'owner');
-
-
-    const currentSessionData = await redisClient.hGet(`interviews:${interviewId}`, 'history');
-    const history = JSON.parse(currentSessionData.history);
     
+    //Retrieving current interview history
+    const currentSessionData = await redisClient.hGet(`interviews:${req.userId}:${interviewId}`, 'history');
+    const history = JSON.parse(currentSessionData);
     appendNewMessage(history, userMessage, 'user');
 
-    //Write the user message to the log
-    fs.appendFileSync(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}`, `user: ${userMessage}\n`);
+    //Write the user message to the log. Doing this separately, since the history will be changed to fit the token count
+    fs.appendFileSync(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}.txt`, `user: ${userMessage}\n`);
 
     try
     {
@@ -63,12 +64,12 @@ const sendMessage = async (req, res, next) => {
         const response = await axios.post(endpoint, payload, { headers });
 
         //Write the AI message to the log
-        fs.appendFileSync(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}`, `interviewer: ${response.data.choices[0].message.content}\n`);
+        fs.appendFileSync(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}.txt`, `interviewer: ${response.data.choices[0].message.content}\n`);
 
         //Append the reply to the message history
         appendNewMessage(history, response.data.choices[0].message.content, 'assistant');
 
-        await redisClient.hSet(`interviews:${interviewId}`, {
+        await redisClient.hSet(`interviews:${req.userId}:${interviewId}`, {
             owner: req.userId,
             history: JSON.stringify(history)
         });
@@ -113,18 +114,20 @@ const create = async (req, res) => {
     //Generate a session id and push it
     const sessionId = randomUUID();
     
-    await redisClient.hSet(`interviews:${sessionId}`, {
-        owner: req.userId,
+    await redisClient.hSet(`interviews:${req.userId}:${sessionId}`, {
         history: JSON.stringify([params]),
     });
 
-    // redisClient.push(sessionId, { owner: req.userId, history: [params] });
-    // console.log(redisClient.get(sessionId));
+    //Create transcript file
+    fs.closeSync(fs.openSync(`${global.appRoot}/data/transcripts/${req.userId}/${sessionId}.txt`, 'w'));
+
+    await filesService.cacheFile(req.userId, sessionId,
+        `${global.appRoot}/data/transcripts/${req.userId}/${sessionId}.txt`, "transcript",  "transcript");
 
     return res.status(201).json({ sessionId: sessionId});
 }
 
-const transcript = async (req, res) => {
+const details = async (req, res) => {
 
     const interviewId = req.params['interviewId'];
 
@@ -134,5 +137,5 @@ const transcript = async (req, res) => {
 }
 
 export default {
-    sendMessage, create, transcript
+    sendMessage, create, details
 }
