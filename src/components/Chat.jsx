@@ -3,7 +3,8 @@ import { sendMessage as apiSendMessage,
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Chat.css';
-import InterviewParameters from './interview-parameters/InterviewParameters'
+import InterviewParameters from './interview-parameters/InterviewParameters';
+import TranscriptDisplay from './TranscriptDisplay';
 
 function Chat() {
     const [chatMessages, setChatMessages] = useState([]); // Stores both user and AI messages
@@ -11,6 +12,8 @@ function Chat() {
     const [userInput, setUserInput] = useState("");
     const [started, setStarted] = useState(false);
     const navigate = useNavigate();
+    const [showTranscript, setShowTranscript] = useState(false);
+    const [transcript, setTranscript] = useState([]);
 
     const MAX_CHARS = 500;
 
@@ -34,7 +37,9 @@ function Chat() {
     const getTranscript = async () => {
         if (!currentInterviewSession) return;
 
-        apiGetTranscript(currentInterviewSession);
+        const transcriptData = await apiGetTranscript(currentInterviewSession);
+        setTranscript(chatMessages); // Or use transcriptData if the API returns formatted data
+        setShowTranscript(true);
     }
 
     const handleInputChange = (e) => {
@@ -111,6 +116,13 @@ function Chat() {
             <div className="interview-parameters-section">
                 <InterviewParameters onStart={startInterview}/>
             </div>
+
+            {showTranscript && (
+            <TranscriptDisplay 
+                transcript={transcript}
+                onClose={() => setShowTranscript(false)}
+            />
+        )}
         </div>
     );
 }
