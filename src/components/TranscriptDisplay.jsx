@@ -1,5 +1,6 @@
 // TranscriptDisplay.jsx
 import React from 'react';
+import './TranscriptDisplay.css';
 
 const TranscriptDisplay = ({ transcript, onClose }) => {
   return (
