@@ -37,7 +37,7 @@ export const sendMessage = async (message, interviewId) => {
 };
 
 
-export const createInterviewSession = async (parameters) => {
+export const createInterviewSession = async (parameters, jobDescription) => {
     const load = JSON.stringify(parameters);
     console.log(load);
 
@@ -45,6 +45,7 @@ export const createInterviewSession = async (parameters) => {
     {
         const response = await api.post(`/interviews`, {
             parameters: load,
+            jobDescription: jobDescription
         }, {
             headers: {
                 'Content-Type': 'application/json',
@@ -112,7 +113,7 @@ export const evaluateResume = async (resume, jobDescription = '', progressCb) =>
         if (progressCb && typeof progressCb === "function") progressCb("Evaluating");
 
         // Get feedback for the uploaded resume
-        response = await api.get(`/feedback/resumes/${fileId}`, {
+        response = await api.get(`/files/${fileId}/feedback`, {
             headers: {
                 'X-User-ID': USER_ID
             }

@@ -48,7 +48,7 @@ const getMetaData = async (userId, fileId) => {
 }
 
 const getMetaDataWithKey = async (key) => {
-    const metaData = await redisClient.HMGET(key, ["fileName", "fileId", "type", "uploadedAt"]);
+    const metaData = await redisClient.HMGET(key, ["fileName", "type", "fileId", "uploadedAt"]);
     
     //Map the array to the object
     const structData = {

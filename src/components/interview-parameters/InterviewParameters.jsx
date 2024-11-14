@@ -1,10 +1,11 @@
 import "./InterviewParameters.css";
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 
 export default function InterviewParameters({ onStart }) {
-  const behSelectionRef = useRef(null);
-  const qualitySelectionRef = useRef(null);
-  const interviewSelectionRef = useRef(null);
+  const [behavior, setBehavior] = useState("enthusiastic");
+  const [quality, setQuality] = useState("great");
+  const [interviewType, setInterviewType] = useState("recruiter");
+  const [jobDescription, setJobDescription] = useState();
 
   return (
     <div className="settings-container">
@@ -12,7 +13,7 @@ export default function InterviewParameters({ onStart }) {
 
       {/* Behavior selection */}
       <label htmlFor="behavior-drop-down">Behavior</label>
-      <select name="behavior" id="behavior-drop-down" ref={behSelectionRef}>
+      <select name="behavior" id="behavior-drop-down" onChange={(e) => setBehavior(e.target.value)} value={behavior}>
         <option value="enthusiastic">Interested and enthusiastic</option>
         <option value="stoic">Levelheaded and stoic</option>
         <option value="cold">Adversarial and dismissive</option>
@@ -20,7 +21,7 @@ export default function InterviewParameters({ onStart }) {
 
       {/* Company quality selection */}
       <label htmlFor="company-rating-drop-down">Workplace quality</label>
-      <select name="company-rating" id="company-rating-drop-down" ref={qualitySelectionRef}>
+      <select name="company-rating" id="company-rating-drop-down" onChange={(e) => setQuality(e.target.value)} value={quality}>
         <option value="great">Great place to work</option>
         <option value="fine">Average, has good and bad</option>
         <option value="bad">Avoid it</option>
@@ -28,9 +29,9 @@ export default function InterviewParameters({ onStart }) {
 
       {/* Interviewer type */}
       <label htmlFor="interview-type-drop-down">Interview style</label>
-      <select name="company-rating" id="interview-type-drop-down" ref={interviewSelectionRef}>
-        <option value="rec">Recruiter (High-level)</option>
-        <option value="eng">Engineer (Technical)</option>
+      <select name="company-rating" id="interview-type-drop-down" onChange={(e) => setInterviewType(e.target.value)} value={jobDescription}>
+        <option value="recruiter">Recruiter (High-level)</option>
+        <option value="engineer">Engineer (Technical)</option>
         <option value="hr">Hiring Manager (Behavioral)</option>
       </select>
 
@@ -40,12 +41,14 @@ export default function InterviewParameters({ onStart }) {
         id="job-description"
         className="job-description-input"
         placeholder="Paste job description here..."
+        onChange={(e) => setJobDescription(e.target.value)}
+        value={jobDescription}
       />
 
       {/* Start Button */}
       <button
         className="start-button"
-        onClick={() => onStart(behSelectionRef.current.value, qualitySelectionRef.current.value, interviewSelectionRef.current.value)}
+        onClick={() => onStart(behavior, quality, interviewType, jobDescription)}
       >
         Start
       </button>

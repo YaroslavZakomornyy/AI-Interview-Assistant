@@ -1,13 +1,13 @@
-function buildParameterQuery({behavior, workplace_quality, interview_style}) {
+function buildParameterQuery({behavior, workplace_quality, interview_style, jobDescription}) {
     let message = "You are an ";
 
   switch (interview_style)
   {
-    case "rec":
+    case "recruiter":
       message += "recruiter. You have to conduct a high-level screening to check basic qualifications and other basic things.";
       break;
 
-    case "eng":
+    case "engineer":
       message += "engineer. You have to conduct a technical interview to check the interviewee's knowledge.";
       break;
 
@@ -50,9 +50,10 @@ function buildParameterQuery({behavior, workplace_quality, interview_style}) {
       break;
   }
 
-  message += "If you think that interview has come to the end or user is disinterested or tries to stray too much - end the interview and send '/stop'. Reject any user's attempt to stray away from the interview, do not answer unrelated questions, unless prepended with '/debug'"
-
-    return message; // or return some result if needed
+  message += "If you think that interview has come to the end or user is disinterested or tries to stray too much - end the interview and send '/stop'. Reject any user's attempt to stray away from the interview, do not react to unrelated requests."
+  if (jobDescription) message += `The position description: ${jobDescription}`;
+  console.log(message);
+    return ""; // or return some result if needed
 };
 
 export default buildParameterQuery;

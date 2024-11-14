@@ -41,7 +41,7 @@ const sendMessage = async (req, res, next) => {
     appendNewMessage(history, userMessage, 'user');
 
     //Write the user message to the log. Doing this separately, since the history will be changed to fit the token count
-    fs.appendFileSync(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}.txt`, `user: ${userMessage}\n`);
+    fs.appendFileSync(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}.txt`, `[${new Date().toISOString()}]user: ${userMessage}\n`);
 
     try
     {
@@ -58,13 +58,11 @@ const sendMessage = async (req, res, next) => {
             "max_tokens": 200
         };
 
-        // console.log(payload);
-
         //Send a message and wait for the reply
         const response = await axios.post(endpoint, payload, { headers });
 
         //Write the AI message to the log
-        fs.appendFileSync(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}.txt`, `interviewer: ${response.data.choices[0].message.content}\n`);
+        fs.appendFileSync(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}.txt`, `[${new Date().toISOString()}]interviewer: ${response.data.choices[0].message.content}\n`);
 
         //Append the reply to the message history
         appendNewMessage(history, response.data.choices[0].message.content, 'assistant');
@@ -88,20 +86,24 @@ const sendMessage = async (req, res, next) => {
 const create = async (req, res) => {
 
     const parameters = await JSON.parse(req.body.parameters || "");
-
+    console.log(parameters);
     if (req.body.parameters == "" || parameters.quality === undefined || parameters.beh === undefined)
     {
         return res.status(400).json({ error: 'Some parameters are missing.' });
     }
 
+    const jobDescription = req.body.jobDescription || undefined;
+
     if (!fs.existsSync(`${global.appRoot}/data/transcripts/${req.userId}`)){
         fs.mkdirSync(`${global.appRoot}/data/transcripts/${req.userId}`);
     }
 
+    //
     const params = buildParameterQuery({
         behavior: parameters.beh,
         workplace_quality: parameters.quality,
-        interview_style: parameters.int
+        interview_style: parameters.int,
+        jobDescription: jobDescription
     });
 
     const message = 
@@ -120,7 +122,9 @@ const create = async (req, res) => {
         status: "Running",
         transcriptId: sessionId,
         resumeId: "",
-        parameters: JSON.stringify(params),
+        behavior: parameters.beh,
+        workplace_quality: parameters.quality,
+        interview_style: parameters.int,
         jobDescriptionId: "",
     });
     //1 hours

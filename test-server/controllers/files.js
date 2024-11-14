@@ -8,6 +8,7 @@ import multerService from "../services/multer-service.js";
 const requestMetaAll = async (req, res) => {
     const fileType = req.query.type;
     const pattern = `files:${req.userId}:*`
+    console.log(fileType);
     let cursor = 0;
     let result = [];
 
@@ -49,7 +50,7 @@ const upload = async (req, res) => {
         {
             if (err.code === "LIMIT_FILE_SIZE")
             {
-                return res.status(400).json({ error: "File size exceeds the limit of 1MB." });
+                return res.status(413).json({ error: "File size exceeds the limit of 1MB." });
             }
 
             return res.status(400).json({ error: err.message });

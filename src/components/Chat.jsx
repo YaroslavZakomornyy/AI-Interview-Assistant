@@ -23,14 +23,14 @@ function Chat() {
         }
       }
 
-    const startInterview = async (behavior, quality, interviewStyle) => {
+    const startInterview = async (behavior, quality, interviewStyle, jobDescription) => {
         const parameters = {
             "beh" : behavior,
             "quality": quality,
             "int" : interviewStyle
         }
 
-        setCurrentInterviewSession(await apiCreateInterviewSession(parameters));
+        setCurrentInterviewSession(await apiCreateInterviewSession(parameters, jobDescription));
         setStarted(true);
     }
 
