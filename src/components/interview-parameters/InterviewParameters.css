@@ -1,47 +1,59 @@
 .settings-container {
-  /* min-height: 100vh; */
   width: 100%;
-  height: 100%; /* Adjust this if needed */
+  height: 100%;
   background-color: #1a1a2e;
   border-radius: 12px;
   padding: 1rem;
   max-width: 800px;
   margin: 0 auto;
-  /* height: 70vh; */
   display: flex;
   flex-direction: column;
   gap: 14px;
-  /* justify-content: space-between; */
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-  text-align: left;
   font-family: sans-serif;
-  padding: 1rem;
+  overflow-y: auto; /* Allow vertical scroll within the container */
 }
 
 label {
   font-weight: bold;
-  font-size: 1.2rem; /* Adjust the font size as needed */
-  display: block; /* Makes the label display on a new line */
-  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  display: block;
+  margin-bottom: 0.5rem; /* Adjust spacing between label and input */
 }
 
-select {
+select, .job-description-input {
   border: 1px solid #ccc;
   padding: 0.5rem;
   border-radius: 4px;
+  background-color: #333; /* Ensure consistent background color */
+  color: #fff;
   margin-bottom: 1rem;
+  width: 100%; /* Full width to match container */
+}
+
+.job-description-input {
+  min-height: 100px;
+  resize: none; /* Prevent resizing */
 }
 
 button {
-  /* ... other styles ... */
   background-color: #333;
   color: #fff;
   padding: 0.75rem 1rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-weight: bold;
 }
 
-.settings-container button {
-  margin-top: auto;
+.settings-container button.start-button {
+  margin-top: 1rem; /* Space above the button */
+  align-self: center; /* Center the button horizontally */
+  width: 100%; /* Make button span full width */
+  max-width: 200px; /* Optional: limit button width */
+  transition: background-color 0.3s;
+}
+
+.settings-container button.start-button:hover {
+  background-color: #444;
 }
