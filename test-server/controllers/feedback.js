@@ -1,9 +1,7 @@
-import { AzureOpenAI } from "openai";
 import dotenv from "dotenv";
 import axios from "axios";
-import fs from "fs";
 import redisClient from "../redis-client.js";
-import pdfParse from "pdf-parse";
+import filesService from "../services/files-service.js";
 
 dotenv.config();
 
@@ -17,41 +15,73 @@ if (!apiKey || !endpoint)
 }
 
 
-const parse = async (path) => {
-    try
-    {
-        let dataBuffer = fs.readFileSync(path);
-        const data = await pdfParse(dataBuffer);
-        return data.text;
+
+const interviewFeedback = async (req, res) => {
+    const interviewId = req.params['interviewId'];
+    const [interviewStatus, transcriptId] = await redisClient.HMGET(`interviews:${req.userId}:${interviewId}`, ["status", "transcriptId"]);
+    
+    //No feedback on running interview
+    if (interviewStatus === "Running") return res.status(200).json({error: "The interview is still running!"});
+    const transcript = filesService.readAll(await redisClient.HGET(`files:${req.userId}:${transcriptId}`, "path"));
+    const messages =
+    [
+        {
+            "role": "system",
+            "content":"Analyze the provided transcript of an interview. Give feedback on positive and negative sides of the user." +
+                        "Make sure to score the user from 0 to 10 in the following categories: - -Consistency -Content and " +
+                        "any other categories you find useful. Give tips on how to improve the resume."
+            
+        },
+        {
+            "role": "user",
+            "content": transcript,
+        },
+    ]
+    
+    const headers = {
+        "Content-Type": "application/json",
+        "api-key": apiKey
+    };
+
+    // Request payload
+    const payload = {
+        "messages": messages,
+        "temperature": 0.7,
+        "top_p": 0.95,
+        "max_tokens": 300
+    };
+
+    try{
+        const response = await axios.post(endpoint, payload, { headers });
+
+        return res.status(200).json({ message: response.data.choices[0].message.content });
     }
-    catch (err)
-    {
+    catch (err){
         console.error(err);
-        throw new Error("Failed to parse PDF");
+        return res.status(500).json({error: err});
     }
 }
 
-
-//TODO: FIX
-const feedback = async (req, res) => {
+const resumeFeedback = async (req, res) => {
 
     const fileId = req.params["fileId"];
 
-    //Check if it exists
-    if (!(await redisClient.exists(`files:${req.userId}:${fileId}`)))
+    //Check if the file exists
+    if (!redisClient.exists(`files:${req.userId}:${fileId}`))
     {
         return res.status(404).json({ error: 'File not found' });
     }
 
-    const file = await redisClient.hGet(`files:${req.userId}:${fileId}`, "path");
+    const [file, fileType] = await redisClient.HMGET(`files:${req.userId}:${fileId}`, ["path", "type"]);
 
     if (!file){
         console.log("file for feedback is not found");
         return res.sendStatus(500);
     }
 
-    console.log(file);
-    const contents = await parse(file);
+    if (fileType !== "resume") return res.status(400).json({error: "Only files with 'resume' type are allowed!"});
+
+    const contents = await filesService.parsePdf(file);
 
     const messages =
     [
@@ -78,14 +108,12 @@ const feedback = async (req, res) => {
         "messages": messages,
         "temperature": 0.7,
         "top_p": 0.95,
-        "max_tokens": 800
+        "max_tokens": 300
     };
 
     try {
         const response = await axios.post(endpoint, payload, { headers });
-        if (!response.data || !response.data.choices || !response.data.choices[0]) {
-            return res.status(500).json({ error: "Invalid API response" });
-        }
+
         return res.status(200).json({ message: response.data.choices[0].message.content });
     } catch (err) {
         console.error("Error in API request:", err);
@@ -95,9 +123,5 @@ const feedback = async (req, res) => {
 
 
 export default {
-    feedback
+    resumeFeedback, interviewFeedback
 }
-
-
-
-

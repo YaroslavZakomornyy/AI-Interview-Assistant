@@ -11,33 +11,21 @@ const requestMetaAll = async (req, res) => {
     let cursor = 0;
     let result = [];
 
-<<<<<<< HEAD
     do
     {
         const scanRes = await redisClient.SCAN(cursor, { MATCH: pattern, COUNT: 10 });
-        console.log(scanRes);
+        
         if (scanRes.keys.length == 0) break;
         cursor = scanRes.cursor;
-        console.log(cursor);
         const keys = scanRes.keys;
 
         for (const key of keys)
         {
-=======
-    do {
-        const [newCursor, keys] = await redisClient.scan(cursor, { MATCH: pattern, COUNT: 10 });
-        cursor = parseInt(newCursor);
-        for (const key of keys) {
->>>>>>> 992aaf65a04588e1f2a432d872eb80de12f7de3d
             const obj = await filesService.getMetaDataWithKey(key);
             if (fileType !== undefined && fileType !== obj.type) continue;
             result.push(obj);
         }
-<<<<<<< HEAD
-    } while (cursor !== 0)
-=======
     } while (cursor !== 0);
->>>>>>> 992aaf65a04588e1f2a432d872eb80de12f7de3d
 
     return res.status(200).json(result);
 }
@@ -110,13 +98,6 @@ const remove = async (req, res) => {
         if (err) {
             console.error("Error deleting the file:", err);
             return res.sendStatus(500);
-<<<<<<< HEAD
-        }
-        else
-        {
-            await redisClient.del(`files:${req.userId}:${fileId}`);
-            return res.sendStatus(200);
-=======
         } else {
             try {
                 await redisClient.del(`files:${req.userId}:${fileId}`);
@@ -125,7 +106,6 @@ const remove = async (req, res) => {
                 console.error("Error deleting file metadata in Redis:", redisErr);
                 return res.sendStatus(500);
             }
->>>>>>> 992aaf65a04588e1f2a432d872eb80de12f7de3d
         }
     });
 }

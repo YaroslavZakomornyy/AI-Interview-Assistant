@@ -1,6 +1,9 @@
 import redisClient from "../redis-client.js";
 import path from "path";
-//TODO: Add cached file option. Not all files will be needed for a fast retrieval
+import pdfParse from "pdf-parse";
+import fs from "fs";
+
+//TODO: Add persistent file option. Not all files will be needed for a fast retrieval
 /**
  * Saves file metadata to the REDIS
  * @param {string} userId - user id.
@@ -30,7 +33,7 @@ const cacheFile = async (userId, id, filePath, name, type) => {
 
 const getMetaData = async (userId, fileId) => {
 
-    //Not retrieving the fileId since it is already passed
+    //Not retrieving the fileId since it is already passed as an argument
     const metaData = await redisClient.HMGET(`files:${userId}:${fileId}`, ["fileName", "type", "uploadedAt"]);
     
     //Map the array to the object
@@ -58,6 +61,31 @@ const getMetaDataWithKey = async (key) => {
     return structData;
 }
 
+const parsePdf = async (path) => {
+    try
+    {
+        let dataBuffer = fs.readFileSync(path);
+        const data = await pdfParse(dataBuffer);
+        return data.text;
+    }
+    catch (err)
+    {
+        console.error(err);
+        return "";
+    }
+}
+
+const readAll = async (path) => {
+    try {
+        const data = fs.readFileSync(path, 'utf8');
+        return data;
+    } catch (err) {
+        console.error('Error reading file:', err);
+        return "";
+    }
+}
+
+
 export default {
-    cacheFile, getMetaData, getMetaDataWithKey
+    cacheFile, getMetaData, getMetaDataWithKey, parsePdf, readAll
 }

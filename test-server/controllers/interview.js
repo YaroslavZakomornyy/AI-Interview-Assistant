@@ -98,16 +98,16 @@ const create = async (req, res) => {
         fs.mkdirSync(`${global.appRoot}/data/transcripts/${req.userId}`);
     }
 
-    const message = buildParameterQuery({
+    const params = buildParameterQuery({
         behavior: parameters.beh,
         workplace_quality: parameters.quality,
         interview_style: parameters.int
     });
 
-    const params = 
+    const message = 
         {
             "role": "system",
-            "content": message
+            "content": params
         }
     ;
 
@@ -115,27 +115,41 @@ const create = async (req, res) => {
     const sessionId = randomUUID();
     
     await redisClient.hSet(`interviews:${req.userId}:${sessionId}`, {
-        history: JSON.stringify([params]),
+        history: JSON.stringify([message]),
+        startedAt: new Date().toISOString(),
+        status: "Running",
+        transcriptId: sessionId,
+        resumeId: "",
+        parameters: JSON.stringify(params),
+        jobDescriptionId: "",
     });
+    //1 hours
+    const INTERVIEW_TTL_SECONDS = 1 * 60 * 60;
+
+    //Set 1 hour expiration time. It is updated on each interaction. The expiration will be cancelled if the status changes to "Finished"
+    await redisClient.EXPIRE(`interviews:${req.userId}:${sessionId}`, INTERVIEW_TTL_SECONDS);
 
     //Create transcript file
     fs.closeSync(fs.openSync(`${global.appRoot}/data/transcripts/${req.userId}/${sessionId}.txt`, 'w'));
 
     await filesService.cacheFile(req.userId, sessionId,
-        `${global.appRoot}/data/transcripts/${req.userId}/${sessionId}.txt`, "transcript",  "transcript");
+        `${global.appRoot}/data/transcripts/${req.userId}/${sessionId}.txt`, "transcript", "transcript");
 
-    return res.status(201).json({ sessionId: sessionId});
+    return res.status(201).json({ sessionId: sessionId, transcriptId: sessionId});
 }
 
-const details = async (req, res) => {
+const getData = async (req, res) => {
 
     const interviewId = req.params['interviewId'];
 
+    if (!(await redisClient.exists(`interviews:${req.userId}:${interviewId}`))) return res.status(404).json({ error: "Interview not found" });
+
+    const interview = await redisClient.HGETALL(`interviews:${req.userId}:${interviewId}`);
     // const history = fs.readFileSync();
 
-    return res.status(200).sendFile(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}`);
+    return res.status(200).json(interview);
 }
 
 export default {
-    sendMessage, create, details
+    sendMessage, create, getData
 }

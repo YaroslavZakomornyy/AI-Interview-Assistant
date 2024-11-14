@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import interviewRoutes from './routes/interview-routes.js';
-import feedbackRoutes from './routes/feedback-routes.js';
 import fileManagementRoutes from './routes/files-routes.js';
 import { dirname} from 'path';
 import { fileURLToPath } from 'url';
@@ -28,13 +27,11 @@ app.use(function(req, res, next){
     const userId = req.headers['x-user-id'] || req.query.userId;
 
     if (!userId) return res.sendStatus(401);
-
     req.userId = userId;
     next();
 });
 
 
-router.use(feedbackRoutes);
 router.use(interviewRoutes);
 router.use(fileManagementRoutes);
 
