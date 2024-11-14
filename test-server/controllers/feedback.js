@@ -38,7 +38,7 @@ const feedback = async (req, res) => {
     const fileId = req.params["fileId"];
 
     //Check if it exists
-    if (!redisClient.exists(`files:${req.userId}:${fileId}`))
+    if (await redisClient.exists(`files:${req.userId}:${fileId}`))
     {
         return res.status(404).json({ error: 'File not found' });
     }
@@ -57,9 +57,9 @@ const feedback = async (req, res) => {
     [
         {
             "role": "system",
-            "content":"Analyze the provided resume and give feedback on positive and negative sides of the resume." +
+            "content":"Briefly analyze the provided resume and give feedback on positive and negative sides of the resume in a paragraph." +
                         "Make sure to score the user from 0 to 10 in the following categories: -Style -Consistency -Content and " +
-                        "any other categories you find useful. Give tips on how to improve the resume."
+                        "any other categories you find useful. Give tips on how to improve the resume in a paragraph."
             
         },
         {
@@ -78,7 +78,7 @@ const feedback = async (req, res) => {
         "messages": messages,
         "temperature": 0.7,
         "top_p": 0.95,
-        "max_tokens": 200
+        "max_tokens": 800
     };
 
     try{
