@@ -86,44 +86,44 @@ export const getTranscript = async (interviewId) => {
     }
 }
 
-export const evaluateResume = async (resume, progressCb) => {
+export const evaluateResume = async (resume, jobDescription = '', progressCb) => {
     const formData = new FormData();
     formData.append('file', resume, resume.name);
+    
+    // Optionally add job description if provided
+    if (jobDescription) {
+        formData.append('jobDescription', jobDescription);
+    }
 
-    try
-    {
+    try {
+        if (progressCb && typeof progressCb === "function") progressCb("Uploading");
 
-        if(progressCb && typeof progressCb === "function") progressCb("Uploading");
-
-        //Upload the resume
-        let response = await api.post("/files", formData,
-            {
-                headers: {
-                    'x-user-id': USER_ID
-                }
-            });
+        // Upload the resume
+        let response = await api.post("/files", formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'X-User-ID': USER_ID
+            }
+        });
 
         console.log(response);
         const fileId = response.data.fileId;
 
+        if (progressCb && typeof progressCb === "function") progressCb("Evaluating");
 
-        if(progressCb && typeof progressCb === "function") progressCb("Evaluating")
-
-        //Get the feedback for it
-        response = await api.get(`feedback/resumes/${fileId}`,
-            {
-                headers: {
-                    'x-user-id': USER_ID
-                }
+        // Get feedback for the uploaded resume
+        response = await api.get(`/feedback/resumes/${fileId}`, {
+            headers: {
+                'X-User-ID': USER_ID
             }
-        );
+        });
 
-        if(progressCb && typeof progressCb === "function") progressCb("Done")
+        if (progressCb && typeof progressCb === "function") progressCb("Done");
         
         return response;
 
-    } catch (error)
-    {
-        console.error('Error:', error);
+    } catch (error) {
+        console.error('Error in evaluateResume:', error);
+        throw error;  // Propagate the error for additional handling in ResumePage.jsx
     }
-}
+};

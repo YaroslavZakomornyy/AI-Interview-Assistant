@@ -5,24 +5,18 @@ import FeedbackModal from './FeedbackMenu';
 
 function ResumePage() {
   const [file, setFile] = useState(null);
-  const [status, setStatus] = useState(""); 
+  const [status, setStatus] = useState("");
   const [feedbackDetails, setFeedbackDetails] = useState(null);
   const [jobDescription, setJobDescription] = useState("");
 
   const updateStatus = (status) => {
-    switch(status) {
-      case "Uploading":
-        setStatus("Uploading your resume...");
-        break;
-      case "Evaluating":
-        setStatus("Analyzing your resume...");
-        break;
-      case "Done":
-        setStatus("Analysis complete!");
-        break;
-      default:
-        setStatus(status);
-    }
+    const statusMessages = {
+      "Uploading": "Uploading your resume...",
+      "Evaluating": "Analyzing your resume...",
+      "Done": "Analysis complete!",
+      "Error": "An error occurred. Please try again."
+    };
+    setStatus(statusMessages[status] || status);
   };
 
   const handleFileChange = async (event) => {
@@ -33,23 +27,17 @@ function ResumePage() {
       try {
         const res = await apiEvaluateResume(file, jobDescription, updateStatus);
         
-        // Check if response and response.data exist
-        if (!res || !res.data) {
-          throw new Error('Invalid response format');
-        }
-        
-        // Access the message from the response data
-        const feedbackText = res.data.message;
-        if (!feedbackText) {
-          throw new Error('No feedback message in response');
+        if (!res || !res.data || !res.data.message) {
+          throw new Error('Invalid response format or missing feedback message');
         }
 
+        const feedbackText = res.data.message;
         const feedback = parseFeedbackResponse(feedbackText);
         setFeedbackDetails(feedback);
         updateStatus("Done");
       } catch (error) {
         console.error('Error uploading resume:', error);
-        updateStatus('An error occurred during upload. Please try again.');
+        updateStatus('Error');
         setFeedbackDetails(null);
       }
     } else {
@@ -60,66 +48,32 @@ function ResumePage() {
 
   const parseFeedbackResponse = (feedbackText) => {
     try {
-      if (!feedbackText) {
-        throw new Error('No feedback text provided');
-      }
-
-      // Clean up the text by removing excess symbols and formatting
       const cleanedText = feedbackText
-        .replace(/#{3,}/g, '') // Remove ### symbols
-        .replace(/\*\*/g, '')  // Remove ** symbols
+        .replace(/#{3,}/g, '') 
+        .replace(/\*\*/g, '')
         .trim();
 
-      // Split into main sections
       const sections = cleanedText.split(/(?=Style:|Consistency:|Content:|General:|Areas for Improvement:)/g);
       
-      const categories = [];
-      
-      sections.forEach(section => {
-        if (!section.trim()) return;
-        
-        // Extract section name and score
+      const categories = sections.map(section => {
         const titleMatch = section.match(/^([^:]+):\s*(?:Score:\s*)?(\d+)?\/?10?\s*(.*)/);
-        
         if (titleMatch) {
           const [, name, score, remainingText] = titleMatch;
-          
-          // Split feedback and tips
-          let feedback = '';
-          let tips = '';
-          
-          // Check if there's a "Tips:" section
           const [feedbackPart, tipsPart] = remainingText.split(/(?=Tips:)/);
-          
-          if (feedbackPart) {
-            // Process feedback: Split into bullet points if possible
-            feedback = feedbackPart
-              .split(/(?:\d+\.\s+)/)
-              .filter(Boolean)
-              .map(point => point.trim())
-              .join('\n\n');
-          }
-          
-          if (tipsPart) {
-            // Process tips: Remove "Tips:" prefix and split into bullet points
-            tips = tipsPart
-              .replace(/^Tips:\s*/, '')
-              .split(/(?:\d+\.\s+)/)
-              .filter(Boolean)
-              .map(point => point.trim())
-              .join('\n\n');
-          }
-          
-          categories.push({
+
+          const feedback = feedbackPart ? feedbackPart.split(/(?:\d+\.\s+)/).filter(Boolean).join('\n\n') : '';
+          const tips = tipsPart ? tipsPart.replace(/^Tips:\s*/, '').split(/(?:\d+\.\s+)/).filter(Boolean).join('\n\n') : "No specific tips provided.";
+
+          return {
             name: name.trim(),
             score: parseInt(score) || 5,
             feedback: feedback.trim(),
             tips: tips || "No specific tips provided."
-          });
+          };
         }
-      });
+        return null;
+      }).filter(Boolean);
 
-      // If no categories were found, create a default one
       if (categories.length === 0) {
         categories.push({
           name: 'General',
@@ -137,7 +91,7 @@ function ResumePage() {
           name: 'Error',
           score: 0,
           feedback: 'There was an error processing your resume feedback.',
-          tips: 'Please try uploading your resume again. If the problem persists, contact support.'
+          tips: 'Please try uploading your resume again or contact support if the problem persists.'
         }]
       };
     }
@@ -146,7 +100,7 @@ function ResumePage() {
   return (
     <div className="resume-page">
       <h1>Resume Analysis</h1>
-      <p>Upload your resume and job description to get AI powered feedback!</p>
+      <p>Upload your resume and job description to get AI-powered feedback!</p>
       
       <div className="input-container">
         <textarea

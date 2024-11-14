@@ -27,7 +27,7 @@ const parse = async (path) => {
     catch (err)
     {
         console.error(err);
-        return "";
+        throw new Error("Failed to parse PDF");
     }
 }
 
@@ -38,7 +38,7 @@ const feedback = async (req, res) => {
     const fileId = req.params["fileId"];
 
     //Check if it exists
-    if (await redisClient.exists(`files:${req.userId}:${fileId}`))
+    if (!(await redisClient.exists(`files:${req.userId}:${fileId}`)))
     {
         return res.status(404).json({ error: 'File not found' });
     }
@@ -81,14 +81,15 @@ const feedback = async (req, res) => {
         "max_tokens": 800
     };
 
-    try{
+    try {
         const response = await axios.post(endpoint, payload, { headers });
-        // console.log(response);
+        if (!response.data || !response.data.choices || !response.data.choices[0]) {
+            return res.status(500).json({ error: "Invalid API response" });
+        }
         return res.status(200).json({ message: response.data.choices[0].message.content });
-    }
-    catch (err){
-        console.error(err);
-        return res.status(500).json({error: err});
+    } catch (err) {
+        console.error("Error in API request:", err);
+        return res.status(500).json({ error: "Failed to get feedback" });
     }
 }
 
