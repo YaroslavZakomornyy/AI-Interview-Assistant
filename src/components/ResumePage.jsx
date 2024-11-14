@@ -60,50 +60,71 @@ function ResumePage() {
 
   const parseFeedbackResponse = (feedbackText) => {
     try {
-      // Guard clause for undefined or null feedbackText
       if (!feedbackText) {
         throw new Error('No feedback text provided');
       }
 
-      // First, try to split by clear section indicators
-      const categories = [];
-      const sections = feedbackText.split(/(?=Style:|Consistency:|Content:|General:)/g);
-      
-      if (sections.length === 0 || (sections.length === 1 && !sections[0].trim())) {
-        // If no sections found, return a general feedback category
-        return {
-          categories: [{
-            name: 'General',
-            score: 5,
-            feedback: feedbackText.trim() || 'No specific feedback provided',
-            tips: 'Please try uploading your resume again for more specific feedback.'
-          }]
-        };
-      }
+      // Clean up the text by removing excess symbols and formatting
+      const cleanedText = feedbackText
+        .replace(/#{3,}/g, '') // Remove ### symbols
+        .replace(/\*\*/g, '')  // Remove ** symbols
+        .trim();
 
+      // Split into main sections
+      const sections = cleanedText.split(/(?=Style:|Consistency:|Content:|General:|Areas for Improvement:)/g);
+      
+      const categories = [];
+      
       sections.forEach(section => {
         if (!section.trim()) return;
         
-        // Enhanced regex to better capture feedback structure
-        const categoryMatch = section.match(/([^:]+):\s*(\d+)\/10\s*([^]*?)(?=(?:Tips:|$))/i);
-        const tipsMatch = section.match(/Tips:\s*([^]*?)(?=(?:[A-Z][a-z]+:|$))/i);
+        // Extract section name and score
+        const titleMatch = section.match(/^([^:]+):\s*(?:Score:\s*)?(\d+)?\/?10?\s*(.*)/);
         
-        if (categoryMatch) {
+        if (titleMatch) {
+          const [, name, score, remainingText] = titleMatch;
+          
+          // Split feedback and tips
+          let feedback = '';
+          let tips = '';
+          
+          // Check if there's a "Tips:" section
+          const [feedbackPart, tipsPart] = remainingText.split(/(?=Tips:)/);
+          
+          if (feedbackPart) {
+            // Process feedback: Split into bullet points if possible
+            feedback = feedbackPart
+              .split(/(?:\d+\.\s+)/)
+              .filter(Boolean)
+              .map(point => point.trim())
+              .join('\n\n');
+          }
+          
+          if (tipsPart) {
+            // Process tips: Remove "Tips:" prefix and split into bullet points
+            tips = tipsPart
+              .replace(/^Tips:\s*/, '')
+              .split(/(?:\d+\.\s+)/)
+              .filter(Boolean)
+              .map(point => point.trim())
+              .join('\n\n');
+          }
+          
           categories.push({
-            name: categoryMatch[1].trim(),
-            score: parseInt(categoryMatch[2]) || 5,
-            feedback: categoryMatch[3].trim(),
-            tips: tipsMatch ? tipsMatch[1].trim() : "No specific tips provided."
+            name: name.trim(),
+            score: parseInt(score) || 5,
+            feedback: feedback.trim(),
+            tips: tips || "No specific tips provided."
           });
         }
       });
 
-      // If no categories were created from parsing, create a general category
+      // If no categories were found, create a default one
       if (categories.length === 0) {
         categories.push({
           name: 'General',
           score: 5,
-          feedback: feedbackText.trim(),
+          feedback: cleanedText,
           tips: "Please try uploading your resume again for more specific feedback."
         });
       }
@@ -111,7 +132,6 @@ function ResumePage() {
       return { categories };
     } catch (error) {
       console.error('Error parsing feedback:', error);
-      // Return a structured error feedback
       return {
         categories: [{
           name: 'Error',

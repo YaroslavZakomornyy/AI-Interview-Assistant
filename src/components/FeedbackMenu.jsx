@@ -1,9 +1,16 @@
-// FeedbackModal.jsx
 import React from 'react';
 import './FeedbackMenu.css';
 
 const FeedbackModal = ({ feedback, onClose }) => {
   if (!feedback) return null;
+
+  const renderFormattedText = (text) => {
+    return text.split('\n\n').map((paragraph, index) => (
+      <p key={index} className="feedback-paragraph">
+        {paragraph.trim() && `• ${paragraph.trim()}`}
+      </p>
+    ));
+  };
 
   return (
     <div className="modal-overlay">
@@ -13,16 +20,31 @@ const FeedbackModal = ({ feedback, onClose }) => {
         <div className="modal-body">
           {feedback.categories?.map((category, index) => (
             <div key={index} className="feedback-category">
-              <h3 className="category-title">
-                {category.name} - Score: {category.score}/10
-              </h3>
+              <div className="category-header">
+                <h3 className="category-title">
+                  {category.name}
+                </h3>
+                <div className="score-badge">
+                  Score: {category.score}/10
+                </div>
+              </div>
+              
               <div className="category-content">
-                <p className="feedback-text">
-                  <strong>Feedback:</strong> {category.feedback}
-                </p>
-                <p className="tips-text">
-                  <strong>Tips:</strong> {category.tips}
-                </p>
+                <div className="feedback-section">
+                  <h4 className="section-title">Feedback</h4>
+                  <div className="feedback-text">
+                    {renderFormattedText(category.feedback)}
+                  </div>
+                </div>
+
+                {category.tips && (
+                  <div className="tips-section">
+                    <h4 className="section-title">Recommendations</h4>
+                    <div className="tips-text">
+                      {renderFormattedText(category.tips)}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
