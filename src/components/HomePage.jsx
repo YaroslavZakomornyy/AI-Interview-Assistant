@@ -3,6 +3,10 @@ import './HomePage.css';
 import { Link } from 'react-router-dom';
 
 function HomePage() {
+  const handlePastFeedbackClick = (event) => {
+    event.preventDefault();
+    alert("The 'Past Feedback' feature is still in progress. Check back soon!");
+  };
   return (
     <div className="home-page">
       <h1>AI Interview Assistant</h1>
@@ -11,7 +15,7 @@ function HomePage() {
       <p></p>
       <Link to="/resume" className="button">Resume Analysis</Link>
       <p></p>
-      <Link to="/resume" className="button">Past Feedback</Link>
+      <a href="#" className="button" onClick={handlePastFeedbackClick}>Past Feedback</a>
     </div>
   );
 }

@@ -1,50 +1,137 @@
 import React, { useState } from 'react';
 import './ResumePage.css';
-import {evaluateResume as apiEvaluateResume} from './api';
-import FeedbackMenu from './FeedbackMenu';
+import { evaluateResume as apiEvaluateResume } from './api';
+import FeedbackModal from './FeedbackMenu';
 
 function ResumePage() {
   const [file, setFile] = useState(null);
-  const [feedback, setFeedback] = useState(""); 
+  const [status, setStatus] = useState("");
   const [feedbackDetails, setFeedbackDetails] = useState(null);
-  // const [jobDescription, setJobDescription] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
 
-  const stateFeedback = (fb) => {
-    switch(fb){
-      case "Uploading":
-        setFeedback("Uploading your resume...");
-        break;
-      case "Evaluating":
-        setFeedback("Analyzing your resume...");
-        break;
-      case "Done":
-        setFeedback("Retrieving your resume...");
-    }
-  }
+  const updateStatus = (status) => {
+    const statusMessages = {
+      "Uploading": "Uploading your resume...",
+      "Evaluating": "Analyzing your resume...",
+      "Done": "Analysis complete!",
+      "Error": "An error occurred. Please try again."
+    };
+    setStatus(statusMessages[status] || status);
+  };
 
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
     if (file && file.type === 'application/pdf') {
-      stateFeedback("Uploading");
-      const res = await apiEvaluateResume(file, jobDescription, stateFeedback);
-      setFeedback("Feedback received.");
-      setFeedbackDetails(res);
+      setFeedbackDetails(null);
+      updateStatus("Uploading");
+      try {
+        const res = await apiEvaluateResume(file, jobDescription, updateStatus);
+        
+        if (!res || !res.data || !res.data.message) {
+          throw new Error('Invalid response format or missing feedback message');
+        }
+
+        const feedbackText = res.data.message;
+        const feedback = parseFeedbackResponse(feedbackText);
+        setFeedbackDetails(feedback);
+        updateStatus("Done");
+      } catch (error) {
+        console.error('Error uploading resume:', error);
+        updateStatus('Error');
+        setFeedbackDetails(null);
+      }
     } else {
-      setFeedback('Please upload a PDF file.');
+      updateStatus('Please upload a PDF file.');
+      setFeedbackDetails(null);
+    }
+  };
+
+  const parseFeedbackResponse = (feedbackText) => {
+    try {
+      const cleanedText = feedbackText
+        .replace(/#{3,}/g, '') 
+        .replace(/\*\*/g, '')
+        .trim();
+  
+      const sections = cleanedText.split(/(?=Style:|Consistency:|Content:|General:|Areas for Improvement:)/g);
+      
+      const categories = sections.map(section => {
+        const titleMatch = section.match(/^([^:]+):\s*(?:Score:\s*)?(\d+)?\/?10?\s*(.*)/);
+        if (titleMatch) {
+          const [, name, score, remainingText] = titleMatch;
+          const [feedbackPart, tipsPart] = remainingText.split(/(?=Tips:)/);
+  
+          const feedback = feedbackPart ? feedbackPart.split(/(?:\d+\.\s+)/).filter(Boolean).join('\n\n') : '';
+          let tips = tipsPart ? tipsPart.replace(/^Tips:\s*/, '').split(/(?:\d+\.\s+)/).filter(Boolean).join('\n\n') : null;
+  
+          // Provide more detailed default tips if none are provided
+          if (!tips || tips.trim() === "No specific tips provided.") {
+            tips = generateDefaultTips(name);
+          }
+  
+          return {
+            name: name.trim(),
+            score: parseInt(score) || 5,
+            feedback: feedback.trim(),
+            tips: tips.trim()
+          };
+        }
+        return null;
+      }).filter(Boolean);
+  
+      // Fallback if no specific categories found
+      if (categories.length === 0) {
+        categories.push({
+          name: 'General',
+          score: 5,
+          feedback: cleanedText,
+          tips: "Please try uploading your resume again for more specific feedback."
+        });
+      }
+  
+      return { categories };
+    } catch (error) {
+      console.error('Error parsing feedback:', error);
+      return {
+        categories: [{
+          name: 'Error',
+          score: 0,
+          feedback: 'There was an error processing your resume feedback.',
+          tips: 'Please try uploading your resume again or contact support if the problem persists.'
+        }]
+      };
+    }
+  };
+  
+  // Generate default tips based on category name
+  const generateDefaultTips = (categoryName) => {
+    switch (categoryName) {
+      case 'Style':
+        return "• Ensure consistent formatting and font usage.\n• Keep bullet points clear and concise.";
+      case 'Consistency':
+        return "• Verify consistency in dates, job titles, and locations.\n• Ensure uniform use of action verbs.";
+      case 'Content':
+        return "• Include quantifiable achievements.\n• Tailor skills and experiences to match the job description.";
+      case 'General':
+        return "• Focus on key skills that match the job requirements.\n• Avoid excessive or unnecessary information.";
+      case 'Areas for Improvement':
+        return "• Highlight your achievements more prominently.\n• Use action-oriented language to describe your experiences.";
+      default:
+        return "• Review your resume for clarity and relevance to the job description.";
     }
   };
 
   return (
     <div className="resume-page">
       <h1>Resume Analysis</h1>
-      <p>Upload your resume and job description to get AI powered feedback!</p>
+      <p>Upload your resume and job description to get AI-powered feedback!</p>
       
       <div className="input-container">
         <textarea
           className="job-description-input"
           placeholder="Paste the job description here..."
-          // value={jobDescription}
-          // onChange={(e) => setJobDescription(e.target.value)}
+          value={jobDescription}
+          onChange={(e) => setJobDescription(e.target.value)}
         />
         
         <div className="file-input-container">
@@ -57,7 +144,14 @@ function ResumePage() {
         </div>
       </div>
       
-      {feedback && <div className="feedback">{feedback}</div>}
+      {status && <div className="status-message">{status}</div>}
+      
+      {feedbackDetails && (
+        <FeedbackModal 
+          feedback={feedbackDetails} 
+          onClose={() => setFeedbackDetails(null)} 
+        />
+      )}
     </div>
   );
 }

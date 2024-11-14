@@ -11,6 +11,7 @@ const requestMetaAll = async (req, res) => {
     let cursor = 0;
     let result = [];
 
+<<<<<<< HEAD
     do
     {
         const scanRes = await redisClient.SCAN(cursor, { MATCH: pattern, COUNT: 10 });
@@ -22,11 +23,21 @@ const requestMetaAll = async (req, res) => {
 
         for (const key of keys)
         {
+=======
+    do {
+        const [newCursor, keys] = await redisClient.scan(cursor, { MATCH: pattern, COUNT: 10 });
+        cursor = parseInt(newCursor);
+        for (const key of keys) {
+>>>>>>> 992aaf65a04588e1f2a432d872eb80de12f7de3d
             const obj = await filesService.getMetaDataWithKey(key);
             if (fileType !== undefined && fileType !== obj.type) continue;
             result.push(obj);
         }
+<<<<<<< HEAD
     } while (cursor !== 0)
+=======
+    } while (cursor !== 0);
+>>>>>>> 992aaf65a04588e1f2a432d872eb80de12f7de3d
 
     return res.status(200).json(result);
 }
@@ -81,7 +92,12 @@ const download = async (req, res) => {
 
     const filePath = await redisClient.hGet(`files:${req.userId}:${fileId}`, "path");
 
-    return res.status(200).sendFile(filePath);
+    try {
+        return res.status(200).sendFile(filePath);
+    } catch (sendErr) {
+        console.error("Error sending file:", sendErr);
+        return res.status(500).json({ error: "Failed to send file" });
+    }
 }
 
 const remove = async (req, res) => {
@@ -91,15 +107,25 @@ const remove = async (req, res) => {
     if (!await redisClient.exists(`files:${req.userId}:${fileId}`)) return res.status(404).json({ message: "File not found" });
 
     fs.unlink(await redisClient.hGet(`files:${req.userId}:${fileId}`, "path"), async (err) => {
-        if (err)
-        {
-            console.error("Error deleting the file.");
+        if (err) {
+            console.error("Error deleting the file:", err);
             return res.sendStatus(500);
+<<<<<<< HEAD
         }
         else
         {
             await redisClient.del(`files:${req.userId}:${fileId}`);
             return res.sendStatus(200);
+=======
+        } else {
+            try {
+                await redisClient.del(`files:${req.userId}:${fileId}`);
+                return res.sendStatus(200);
+            } catch (redisErr) {
+                console.error("Error deleting file metadata in Redis:", redisErr);
+                return res.sendStatus(500);
+            }
+>>>>>>> 992aaf65a04588e1f2a432d872eb80de12f7de3d
         }
     });
 }

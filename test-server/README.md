@@ -100,6 +100,10 @@ GET `/api/v1/files/{fileId}`
 |---|---|---|---|
 |fileId|string|An id of a requested file|Required|
 
+### Example request
+```
+
+```
 
 ### Response
 |Parameter|Type|Description|

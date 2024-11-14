@@ -1,52 +1,53 @@
-
 import "./InterviewParameters.css";
 import { useEffect, useRef } from "react";
 
-export default function InterviewParameters({onStart}) {
+export default function InterviewParameters({ onStart }) {
   const behSelectionRef = useRef(null);
   const qualitySelectionRef = useRef(null);
   const interviewSelectionRef = useRef(null);
-  
+
   return (
     <div className="settings-container">
       <div className="chatbox-heading">Parameters</div>
 
       {/* Behavior selection */}
       <label htmlFor="behavior-drop-down">Behavior</label>
-        <select name="behavior" id="behavior-drop-down" ref={behSelectionRef}>
-          <option value="enthusiastic">Interested and enthusiastic</option>
-          <option value="stoic">Levelheaded and stoic</option>
-          <option value="cold">Adversarial and dismissive</option>
-        </select>
+      <select name="behavior" id="behavior-drop-down" ref={behSelectionRef}>
+        <option value="enthusiastic">Interested and enthusiastic</option>
+        <option value="stoic">Levelheaded and stoic</option>
+        <option value="cold">Adversarial and dismissive</option>
+      </select>
 
       {/* Company quality selection */}
       <label htmlFor="company-rating-drop-down">Workplace quality</label>
-        <select name="company-rating" id="company-rating-drop-down" ref={qualitySelectionRef}>
-          <option value="great">Great place to work</option>
-          <option value="fine">Average, has good and bad</option>
-          <option value="bad">Avoid it</option>
-        </select>
+      <select name="company-rating" id="company-rating-drop-down" ref={qualitySelectionRef}>
+        <option value="great">Great place to work</option>
+        <option value="fine">Average, has good and bad</option>
+        <option value="bad">Avoid it</option>
+      </select>
 
       {/* Interviewer type */}
       <label htmlFor="interview-type-drop-down">Interview style</label>
-        <select name="company-rating" id="interview-type-drop-down" ref={interviewSelectionRef}>
-          <option value="rec">Recruiter (High-level)</option>
-          <option value="eng">Engineer (Technical)</option>
-          <option value="hr">Hiring Manager (Behavioral)</option>
-        </select>
+      <select name="company-rating" id="interview-type-drop-down" ref={interviewSelectionRef}>
+        <option value="rec">Recruiter (High-level)</option>
+        <option value="eng">Engineer (Technical)</option>
+        <option value="hr">Hiring Manager (Behavioral)</option>
+      </select>
 
       {/* Job Description */}
       <label htmlFor="job-description">Job description</label>
-      <textarea 
+      <textarea
         id="job-description"
-        // ref={jobDescriptionRef}
         className="job-description-input"
         placeholder="Paste job description here..."
       />
 
-      <button onClick={() => onStart(behSelectionRef.current.value, qualitySelectionRef.current.value, interviewSelectionRef.current.value)}
-              >
-                Start
+      {/* Start Button */}
+      <button
+        className="start-button"
+        onClick={() => onStart(behSelectionRef.current.value, qualitySelectionRef.current.value, interviewSelectionRef.current.value)}
+      >
+        Start
       </button>
     </div>
   );
