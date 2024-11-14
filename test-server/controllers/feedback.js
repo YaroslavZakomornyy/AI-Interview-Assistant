@@ -57,9 +57,9 @@ const feedback = async (req, res) => {
     [
         {
             "role": "system",
-            "content":"Briefly analyze the provided resume and give feedback on positive and negative sides of the resume in a paragraph." +
+            "content":"Analyze the provided resume and give feedback on positive and negative sides of the resume." +
                         "Make sure to score the user from 0 to 10 in the following categories: -Style -Consistency -Content and " +
-                        "any other categories you find useful. Give tips on how to improve the resume in a paragraph."
+                        "any other categories you find useful. Give tips on how to improve the resume."
             
         },
         {

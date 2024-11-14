@@ -52,7 +52,7 @@ function ResumePage() {
         .replace(/#{3,}/g, '') 
         .replace(/\*\*/g, '')
         .trim();
-
+  
       const sections = cleanedText.split(/(?=Style:|Consistency:|Content:|General:|Areas for Improvement:)/g);
       
       const categories = sections.map(section => {
@@ -60,20 +60,26 @@ function ResumePage() {
         if (titleMatch) {
           const [, name, score, remainingText] = titleMatch;
           const [feedbackPart, tipsPart] = remainingText.split(/(?=Tips:)/);
-
+  
           const feedback = feedbackPart ? feedbackPart.split(/(?:\d+\.\s+)/).filter(Boolean).join('\n\n') : '';
-          const tips = tipsPart ? tipsPart.replace(/^Tips:\s*/, '').split(/(?:\d+\.\s+)/).filter(Boolean).join('\n\n') : "No specific tips provided.";
-
+          let tips = tipsPart ? tipsPart.replace(/^Tips:\s*/, '').split(/(?:\d+\.\s+)/).filter(Boolean).join('\n\n') : null;
+  
+          // Provide more detailed default tips if none are provided
+          if (!tips || tips.trim() === "No specific tips provided.") {
+            tips = generateDefaultTips(name);
+          }
+  
           return {
             name: name.trim(),
             score: parseInt(score) || 5,
             feedback: feedback.trim(),
-            tips: tips || "No specific tips provided."
+            tips: tips.trim()
           };
         }
         return null;
       }).filter(Boolean);
-
+  
+      // Fallback if no specific categories found
       if (categories.length === 0) {
         categories.push({
           name: 'General',
@@ -82,7 +88,7 @@ function ResumePage() {
           tips: "Please try uploading your resume again for more specific feedback."
         });
       }
-
+  
       return { categories };
     } catch (error) {
       console.error('Error parsing feedback:', error);
@@ -94,6 +100,24 @@ function ResumePage() {
           tips: 'Please try uploading your resume again or contact support if the problem persists.'
         }]
       };
+    }
+  };
+  
+  // Generate default tips based on category name
+  const generateDefaultTips = (categoryName) => {
+    switch (categoryName) {
+      case 'Style':
+        return "• Ensure consistent formatting and font usage.\n• Keep bullet points clear and concise.";
+      case 'Consistency':
+        return "• Verify consistency in dates, job titles, and locations.\n• Ensure uniform use of action verbs.";
+      case 'Content':
+        return "• Include quantifiable achievements.\n• Tailor skills and experiences to match the job description.";
+      case 'General':
+        return "• Focus on key skills that match the job requirements.\n• Avoid excessive or unnecessary information.";
+      case 'Areas for Improvement':
+        return "• Highlight your achievements more prominently.\n• Use action-oriented language to describe your experiences.";
+      default:
+        return "• Review your resume for clarity and relevance to the job description.";
     }
   };
 
