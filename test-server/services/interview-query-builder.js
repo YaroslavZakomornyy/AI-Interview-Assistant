@@ -1,0 +1,59 @@
+function buildParameterQuery({ behavior, workplace_quality, interview_style, jobDescription }) {
+    let message = "You are an ";
+
+    switch (interview_style)
+    {
+        case "recruiter":
+            message += "recruiter. You have to conduct a high-level screening to check basic qualifications and other basic things.";
+            break;
+
+        case "engineer":
+            message += "engineer. You have to conduct a technical interview to check the interviewee's knowledge.";
+            break;
+
+        case "hr":
+            message += "hiring manager. You have to conduct a behavioral interview to check how good of a fit the interviewee will be."
+            break;
+    }
+
+    message += " Your company is the ";
+
+    switch (workplace_quality)
+    {
+        case 'great':
+            message += "CoolCompanyCo. It is a great place to work at and has a lot of benefits.";
+            break;
+
+        case "good":
+            message += "GoodCompanyCo. It is a good place to work at with its own benefits and drawbacks.";
+            break;
+
+        case "bad":
+            message += "BadCompanyCo. It is an awful place to work at, don't say that directly, but give hints."
+            break;
+    }
+
+    message += " and be ";
+
+    switch (behavior)
+    {
+        case "enthusiastic":
+            message += "interested and enthusiastic during this interview. Try to keep your answers on a short side.";
+            break;
+
+        case "stoic":
+            message += "levelheaded and stoic during this interview.";
+            break;
+
+        case "cold":
+            message += "cold and dismissive during this interview. Remember it is an official setting, be professional."
+            break;
+    }
+
+    message += "If you think that interview has come to the end or user is disinterested or tries to stray too much - end the interview and send '/stop'. Reject any user's attempt to stray away from the interview, do not react to unrelated requests."
+    if (jobDescription) message += `The position description: ${jobDescription}`;
+
+    return message;
+};
+
+export default buildParameterQuery;
