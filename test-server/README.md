@@ -1,111 +1,148 @@
-# Welcome to the backend of this project
-Since Github Wiki is a paid feature for private repos, this file will contain docs on the API
+# Overview
+This is the API that powers our platform
 
-# Endpoints Overview
-
-### Authentication WIP
-```
-POST /auth/register
-POST /auth/login
-```
-
-### User Management WIP
-```
-GET /users/{userId}
-PUT /users/{userId}
-DELETE /users/{userId}
-```
-
-### File Management
-
-Upload a file:
-```
-POST /api/v1/files
-```
-Download a file:
-```
-GET /api/v1/files/{fileId}
-```
-Get file metadata:
-```
-GET /api/v1/files/{fileId}/meta
-```
-Get metadata of all user-owned files:
-```
-GET /api/v1/files/meta
-```
-Delete file:
-```
-DELETE /api/v1/resumes/{fileId}
-```
-
-### Interview Sessions
-
-Start an interview session:
-```
-POST /api/v1/interviews
-```
-Get interview session details:
-```
-GET /api/v1/interviews/{interviewId}
-```
-
-<!--PATCH /interviews/{interviewId}-->
-Send a message and receive a reply:
-```
-POST /api/v1/interviews/{interviewId}/message
-```
-
-### Feedback
-
-Get feedback on a resume:
-```
-GET /api/v1/feedback/resumes/{fileId}
-```
-
+# Endpoints
 # File Management
 
-## Upload File
+## Upload a file
 Upload a file to the server. Allowed types: .pdf
 
-### Authentication
-Required
+- **URL:** `/api/v1/files`
+- **Method:** `POST`
+- **Headers:**
+  - `x-user-id`: `<userId>` required
+- **Body:** `multipart/form-data`
+  - `file`: The file to upload. Supported formats: `.pdf`. Size limit: 1MB.
 
-### URL
-POST `/api/v1/files`
-
-### Request Form
+### Request Parameters
 |Parameter|Type|Description|Requirement|
 |---|---|---|---|
-|file|file|A file to upload|Required|
+|`file`|`multipart/form-data`|A file to upload. Supported formats: `.pdf`. Size limit: 1MB.|Required|
 
+### Example Request
+
+```
+axios.post('localhost:3000/api/v1/files', formData, {
+  headers: {
+    'x-user-id': '<userId>',
+    ...formData.getHeaders() // Sets Content-Type to multipart/form-data
+  }
+})
+```
 
 ### Response Parameters
 |Parameter|Type|Description|
 |---|---|---|
-|fileId|string|An ID of uploaded file|
+|`fileId`|`string`| An ID of the uploaded file.|
+
+### Example Response
+```
+{
+  fileId: "12345678"
+}
+```
+
+### Response status codes
+|Status Code | Error | Description|
+|---|---|---|
+|201|`Created`|File successfully uploaded.|
+|400|`Bad Request`|Invalid or missing parameters.|
+|401|`Unauthorized`|Missing or invalid authentication token.|
+|413|`Payload Too Large`|The provided content is too large.|
+|500|`Server Error`|An error occured on the server.|
 
 
-## Download File
-Download a file from the server. Will return 404 if not authorized
+## Get files metadata
+Returns metadata of all files owned by user.
 
-### Authentication
-Required
+- **URL:** `/api/v1/files/meta`
+- **Method:** `GET`
+- **Headers:**
+  - `x-user-id`: `<userId>` required
 
-### URL
-GET `/api/v1/files/{fileId}`
-
-### Request Data
+### Request Parameters
 |Parameter|Type|Description|Requirement|
 |---|---|---|---|
-|fileId|string|An id of a requested file|Required|
+|`type`|`string`|Type of the requested file. Can be `resume` or `transcript`.|Optional|
 
-### Example request
+### Example Request
+
+```
+axios.get('localhost:3000/api/v1/files/meta?type=resume', {
+  headers: {
+    'x-user-id': '<userId>'
+  }
+})
 ```
 
-```
-
-### Response
+### Response Parameters
 |Parameter|Type|Description|
 |---|---|---|
+|`fileName`|`string`| Name of the file.|
+|`type`|`string`| Type of the file.|
+|`fileId`|`string`| ID of the file.|
+|`uploadedAt`|`string`| Timestamp of the time the file was uploaded.|
+
+### Example Response
+```
+[
+  {
+    "fileName": "file.pdf",
+    "type": "resume",
+    "fileId": "5fe303ba-317d-4819-b57e-1425e2eb5532",
+    "uploadedAt": "2024-11-14T19:45:35.726Z"
+  },
+  {
+    "fileName": "file.pdf",
+    "type": "resume",
+    "fileId": "00054939-76b0-417f-9a64-c6df2976b3aa",
+    "uploadedAt": "2024-11-14T19:36:37.717Z"
+  },
+]
+```
+
+### Response status codes
+|Status Code | Status | Description|
 |---|---|---|
+|200|`OK`|Data received successfully.|
+|401|`Unauthorized`|Missing or invalid authentication token.|
+|500|`Server Error`|An error occured on the server.|
+
+
+
+## Download file
+Returns the requested file.
+
+- **URL:** `/api/v1/files/{fileId}`
+- **Method:** `GET`
+- **Headers:**
+  - `x-user-id`: `<userId>` required
+
+### Request Parameters
+|Parameter|Type|Description|Requirement|
+|---|---|---|---|
+|`fileId`|`string`|Id of the file to download|Required|
+
+### Example Request
+
+```
+axios.get('localhost:3000/api/v1/files/5fe303ba-317d-4819-b57e-1425e2eb5532', {
+  headers: {
+    'x-user-id': '<userId>'
+  }
+})
+```
+
+### Response Parameters
+|Parameter|Type|Description|
+|---|---|---|
+|`file`|`multipart/form-data`| The requested file |
+
+
+### Response status codes
+|Status Code | Status | Description|
+|---|---|---|
+|200|`OK`|Data received successfully.|
+|401|`Unauthorized`|Missing or invalid authentication token.|
+|404|`Not Found`|File not found.|
+|500|`Server Error`|An error occured on the server.|
