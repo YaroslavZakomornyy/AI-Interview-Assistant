@@ -29,7 +29,7 @@ export default function InterviewParameters({ onStart }) {
 
       {/* Interviewer type */}
       <label htmlFor="interview-type-drop-down">Interview style</label>
-      <select name="company-rating" id="interview-type-drop-down" onChange={(e) => setInterviewType(e.target.value)} value={jobDescription}>
+      <select name="company-rating" id="interview-type-drop-down" onChange={(e) => setInterviewType(e.target.value)} value={interviewType}>
         <option value="recruiter">Recruiter (High-level)</option>
         <option value="engineer">Engineer (Technical)</option>
         <option value="hr">Hiring Manager (Behavioral)</option>
