@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import axios from "axios";
 import redisClient from "../redis-client.js";
-import buildParameterQuery from "../services/message_preprocessor.js";
+import buildParameterQuery from "../services/interview-query-builder.js";
 import { randomUUID } from "crypto";
 import filesService from "../services/files-service.js";
 import fs from "fs";
@@ -92,8 +92,10 @@ const create = async (req, res) => {
         return res.status(400).json({ error: 'Some parameters are missing.' });
     }
 
+    //Either get the description or set it as nothing
     const jobDescription = req.body.jobDescription || undefined;
 
+    //Create a folder for user's transcripts if non-existent
     if (!fs.existsSync(`${global.appRoot}/data/transcripts/${req.userId}`)){
         fs.mkdirSync(`${global.appRoot}/data/transcripts/${req.userId}`);
     }

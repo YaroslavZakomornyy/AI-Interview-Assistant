@@ -88,8 +88,8 @@ const resumeFeedback = async (req, res) => {
         {
             "role": "system",
             "content":"Analyze the provided resume and give feedback on positive and negative sides of the resume." +
-                        "Make sure to score the user from 0 to 10 in the following categories: -Style -Consistency -Content and " +
-                        "any other categories you find useful. Give tips on how to improve the resume."
+                        "Make sure to score the user from 0 to 10 in the following categories: -Style -Consistency -Content -General" +
+                        ". Return an array of json objects that contains the following properties: 'categoryName' (one of the categories, string), 'score' (from 0 to 10, int), 'feedback' (overall feedback on the category, string), 'tips' (ways to improve in that category, array of strings)'."
             
         },
         {
@@ -108,7 +108,7 @@ const resumeFeedback = async (req, res) => {
         "messages": messages,
         "temperature": 0.7,
         "top_p": 0.95,
-        "max_tokens": 300
+        "max_tokens": 500
     };
 
     try {

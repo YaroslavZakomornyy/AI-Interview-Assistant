@@ -4,8 +4,9 @@ import './FeedbackMenu.css';
 const FeedbackModal = ({ feedback, onClose }) => {
   if (!feedback) return null;
 
+  console.log(feedback);
   const renderFormattedText = (text) => {
-    return text.split('\n\n').map((paragraph, index) => (
+    return text.map((paragraph, index) => (
       <p key={index} className="feedback-paragraph">
         {paragraph.trim() && `• ${paragraph.trim()}`}
       </p>
@@ -33,7 +34,7 @@ const FeedbackModal = ({ feedback, onClose }) => {
                 <div className="feedback-section">
                   <h4 className="section-title">Feedback</h4>
                   <div className="feedback-text">
-                    {renderFormattedText(category.feedback)}
+                    {renderFormattedText([category.feedback])}
                   </div>
                 </div>
 

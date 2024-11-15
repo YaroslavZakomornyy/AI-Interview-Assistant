@@ -32,7 +32,8 @@ function ResumePage() {
         }
 
         const feedbackText = res.data.message;
-        const feedback = parseFeedbackResponse(feedbackText);
+
+        const feedback = await parseFeedbackResponse(feedbackText);
         setFeedbackDetails(feedback);
         updateStatus("Done");
       } catch (error) {
@@ -46,37 +47,23 @@ function ResumePage() {
     }
   };
 
-  const parseFeedbackResponse = (feedbackText) => {
-    try {
-      const cleanedText = feedbackText
-        .replace(/#{3,}/g, '') 
-        .replace(/\*\*/g, '')
-        .trim();
-  
-      const sections = cleanedText.split(/(?=Style:|Consistency:|Content:|General:|Areas for Improvement:)/g);
-      
-      const categories = sections.map(section => {
-        const titleMatch = section.match(/^([^:]+):\s*(?:Score:\s*)?(\d+)?\/?10?\s*(.*)/);
-        if (titleMatch) {
-          const [, name, score, remainingText] = titleMatch;
-          const [feedbackPart, tipsPart] = remainingText.split(/(?=Tips:)/);
-  
-          const feedback = feedbackPart ? feedbackPart.split(/(?:\d+\.\s+)/).filter(Boolean).join('\n\n') : '';
-          let tips = tipsPart ? tipsPart.replace(/^Tips:\s*/, '').split(/(?:\d+\.\s+)/).filter(Boolean).join('\n\n') : null;
-  
-          // Provide more detailed default tips if none are provided
-          if (!tips || tips.trim() === "No specific tips provided.") {
-            tips = generateDefaultTips(name);
-          }
-  
-          return {
-            name: name.trim(),
-            score: parseInt(score) || 5,
-            feedback: feedback.trim(),
-            tips: tips.trim()
-          };
+  const parseFeedbackResponse = async (feedbackText) => {
+      let trimmedText = feedbackText.substring(feedbackText.indexOf("["));
+      trimmedText = trimmedText.substring(0, trimmedText.lastIndexOf("]") + 1);
+      trimmedText = await JSON.parse(trimmedText);
+      try {
+      const categories = trimmedText.map(section => {
+        // Provide more detailed default tips if none are provided
+        if (!section.tips) {
+            tips = generateDefaultTips(section.categoryName);
         }
-        return null;
+
+        return {
+        name: section.categoryName.trim(),
+        score: section.score,
+        feedback: section.feedback.trim(),
+        tips: section.tips
+        };
       }).filter(Boolean);
   
       // Fallback if no specific categories found
@@ -88,7 +75,7 @@ function ResumePage() {
           tips: "Please try uploading your resume again for more specific feedback."
         });
       }
-  
+      
       return { categories };
     } catch (error) {
       console.error('Error parsing feedback:', error);
