@@ -65,6 +65,10 @@ function Chat() {
         setChatMessages(prevMessages => [...prevMessages, { sender: 'ai', text: reply }]);
     };
 
+    const handleFeedbackClick = () => {
+        navigate(`/feedback`); // Navigates to the feedback page
+    };
+
     return (
         <div className="chat-container-with-parameters">
 
@@ -100,6 +104,9 @@ function Chat() {
                                 {MAX_CHARS - userInput.length} characters remaining
                             </span>
                             <div className="chat-buttons">
+                                <button className="submit-button" onClick={handleFeedbackClick}>
+                                    View Feedback
+                                </button>
                                 <button className="transcript-button" onClick={getTranscript}>
                                     Get transcript
                                 </button>

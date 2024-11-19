@@ -4,7 +4,7 @@ import Chat from './components/Chat'
 import LandingPage from './components/LandingPage';
 import HomePage from './components/HomePage';
 import ResumePage from './components/ResumePage';
-import InterviewFeedback from './components/InterviewFeedback';
+import FeedbackPage from './components/InterviewFeedback';
 
 function App() {
   return (
@@ -14,7 +14,7 @@ function App() {
         <Route path="/Home" element={<HomePage />} />
         <Route path="/chat" element={<Chat />} /> 
         <Route path="/resume" element={<ResumePage />} />
-        <Route path="/feedback" element={<InterviewFeedback />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
       </Routes>
     </Router>
   );

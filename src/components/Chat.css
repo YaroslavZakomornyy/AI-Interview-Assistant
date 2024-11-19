@@ -205,3 +205,24 @@
   background-color: #5558DD;
 }
 
+.feedback-container {
+  background-color: #28293D;
+  padding: 20px;
+  border-radius: 10px;
+  color: white;
+}
+
+.feedback-container h3, .feedback-container h4 {
+  margin-bottom: 10px;
+  color: #6366F1;
+}
+
+.feedback-container ul {
+  list-style-type: disc;
+  margin-left: 20px;
+}
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+}
