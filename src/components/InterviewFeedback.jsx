@@ -1,36 +1,76 @@
-import React, { useState } from 'react';
-import './Chat.css'; // Reuse styling for consistency
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
+import './Chat.css'; // Reuse styling for consistency
 
-const FeedbackPage = ({ interviewId }) => {
+const FeedbackPage = () => {
     const [feedback, setFeedback] = useState(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const location = useLocation();
 
-    const fetchFeedback = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await axios.get(`/api/feedback/${interviewId}`);
-            setFeedback(response.data.message);
-        } catch (err) {
-            setError('Error fetching feedback. Please try again later.');
-        } finally {
-            setLoading(false);
-        }
-    };
+    useEffect(() => {
+        const fetchInterviewFeedback = async () => {
+            try {
+                // Get the last started interview ID from local storage
+                const lastInterviewId = localStorage.getItem('lastInterviewId');
+                
+                if (!lastInterviewId) {
+                    setError('No recent interview found.');
+                    setLoading(false);
+                    return;
+                }
+
+                const response = await axios.get(`/api/v1/interviews/${lastInterviewId}/feedback`, {
+                    headers: {
+                        'X-User-ID': 1  // Hardcoded user ID for now
+                    }
+                });
+
+                // Parse the feedback 
+                const feedbackContent = response.data.message;
+                // Try to parse the feedback, with fallback to default structure
+                let parsedFeedback;
+                try {
+                    parsedFeedback = JSON.parse(feedbackContent);
+                } catch (parseError) {
+                    console.error('Failed to parse feedback:', parseError);
+                    parsedFeedback = {
+                        overallScore: 0,
+                        positiveAspects: feedbackContent || 'No detailed feedback available.',
+                        negativeAspects: 'No specific negative aspects noted.',
+                        improvementTips: []
+                    };
+                }
+                // const parsedFeedback = JSON.parse(feedbackContent);
+
+                setFeedback({
+                    score: parsedFeedback.overallScore || 0,
+                    positive: parsedFeedback.positiveAspects || 'No specific positive aspects noted.',
+                    negative: parsedFeedback.negativeAspects || 'No specific negative aspects noted.',
+                    improvement: parsedFeedback.improvementTips || []
+                });
+                setLoading(false);
+            } catch (err) {
+                console.error('Error fetching feedback:', err);
+                setError('Failed to fetch interview feedback. Please try again.');
+                setLoading(false);
+            }
+        };
+
+        fetchInterviewFeedback();
+    }, []);
+
+    if (loading) return <div className="chat-container-with-parameters">Loading feedback...</div>;
+    if (error) return <div className="chat-container-with-parameters error-message">{error}</div>;
 
     return (
         <div className="chat-container-with-parameters">
             <div className="chat-section">
                 <h2 className="chatbox-heading">Interview Feedback</h2>
-                {loading ? (
-                    <p>Loading feedback...</p>
-                ) : error ? (
-                    <p className="error-message">{error}</p>
-                ) : feedback ? (
+                {feedback ? (
                     <div className="feedback-container">
-                        <h3>Score: {feedback.score}%</h3>
+                        <h3>Overall Score: {feedback.score}%</h3>
                         <div>
                             <h4>Positive Aspects:</h4>
                             <p>{feedback.positive}</p>
@@ -41,11 +81,15 @@ const FeedbackPage = ({ interviewId }) => {
                         </div>
                         <div>
                             <h4>Areas for Improvement:</h4>
-                            <ul>
-                                {feedback.improvement.map((tip, index) => (
-                                    <li key={index}>{tip}</li>
-                                ))}
-                            </ul>
+                            {feedback.improvement.length > 0 ? (
+                                <ul>
+                                    {feedback.improvement.map((tip, index) => (
+                                        <li key={index}>{tip}</li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p>No specific improvement tips provided.</p>
+                            )}
                         </div>
                     </div>
                 ) : (

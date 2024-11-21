@@ -14,29 +14,31 @@ if (!apiKey || !endpoint)
     throw new Error("Please set API_KEY and ENDPOINT in your environment variables.");
 }
 
-
-
 const interviewFeedback = async (req, res) => {
     const interviewId = req.params['interviewId'];
     const [interviewStatus, transcriptId] = await redisClient.HMGET(`interviews:${req.userId}:${interviewId}`, ["status", "transcriptId"]);
     
-    //No feedback on running interview
+    // No feedback on running interview
     if (interviewStatus === "Running") return res.status(200).json({error: "The interview is still running!"});
+    
     const transcript = filesService.readAll(await redisClient.HGET(`files:${req.userId}:${transcriptId}`, "path"));
-    const messages =
-    [
+    
+    const messages = [
         {
             "role": "system",
-            "content":"Analyze the provided transcript of an interview. Give feedback on positive and negative sides of the user." +
-                        "Make sure to score the user from 0 to 10 in the following categories: - -Consistency -Content and " +
-                        "any other categories you find useful. Give tips on how to improve the resume."
-            
+            "content": "Analyze the provided interview transcript. Provide comprehensive feedback. " +
+                       "If possible, give a JSON response with: " +
+                       "{ 'overallScore': number (0-100), " +
+                       "'positiveAspects': string, " +
+                       "'negativeAspects': string, " +
+                       "'improvementTips': string[] } " +
+                       "If you cannot generate a structured JSON, provide a detailed textual feedback."
         },
         {
             "role": "user",
             "content": transcript,
         },
-    ]
+    ];
     
     const headers = {
         "Content-Type": "application/json",
@@ -48,17 +50,19 @@ const interviewFeedback = async (req, res) => {
         "messages": messages,
         "temperature": 0.7,
         "top_p": 0.95,
-        "max_tokens": 300
+        "max_tokens": 500
     };
 
-    try{
+    try {
         const response = await axios.post(endpoint, payload, { headers });
-
-        return res.status(200).json({ message: response.data.choices[0].message.content });
+        
+        return res.status(200).json({ 
+            message: response.data.choices[0].message.content 
+        });
     }
-    catch (err){
+    catch (err) {
         console.error(err);
-        return res.status(500).json({error: err});
+        return res.status(500).json({error: "Failed to generate interview feedback"});
     }
 }
 
