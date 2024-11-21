@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import './Chat.css'; // Reuse styling for consistency
+import NavBar from './NavBar';
 
 const FeedbackPage = () => {
     const [feedback, setFeedback] = useState(null);

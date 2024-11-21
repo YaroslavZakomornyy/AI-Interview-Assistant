@@ -8,6 +8,7 @@ import './Chat.css';
 import InterviewParameters from './interview-parameters/InterviewParameters';
 import TranscriptDisplay from './TranscriptDisplay';
 import axios from 'axios';
+import NavBar from './NavBar';
 
 function Chat() {
     const [chatMessages, setChatMessages] = useState([]); 

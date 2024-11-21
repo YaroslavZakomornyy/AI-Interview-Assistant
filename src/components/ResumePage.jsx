@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './ResumePage.css';
 import { evaluateResume as apiEvaluateResume } from './api';
 import FeedbackModal from './FeedbackMenu';
+import NavBar from './NavBar';
 
 function ResumePage() {
   const [file, setFile] = useState(null);
@@ -110,6 +111,7 @@ function ResumePage() {
 
   return (
     <div className="resume-page">
+      <NavBar />
       <h1>Resume Analysis</h1>
       <p>Upload your resume and job description to get AI-powered feedback!</p>
       

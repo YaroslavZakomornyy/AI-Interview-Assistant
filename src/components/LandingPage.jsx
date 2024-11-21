@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './landingPage.css';
+import NavBar from './NavBar';
 
 const LandingPage = () => {
   return (
     <div className="landing-container">
+      <NavBar />
       <div className="nav-bar">
       </div>
       <main className="content-section">

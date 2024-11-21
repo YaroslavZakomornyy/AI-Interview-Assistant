@@ -1,5 +1,6 @@
 import React from 'react';
 import './FeedbackMenu.css';
+import NavBar from './NavBar';
 
 const FeedbackModal = ({ feedback, onClose }) => {
   if (!feedback) return null;
