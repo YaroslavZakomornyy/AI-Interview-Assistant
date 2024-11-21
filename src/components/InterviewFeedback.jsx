@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import './Chat.css'; // Reuse styling for consistency
 import NavBar from './NavBar';
+import apiService from '../services/api-service';
+
 
 const FeedbackPage = () => {
     const [feedback, setFeedback] = useState(null);
@@ -12,22 +14,20 @@ const FeedbackPage = () => {
 
     useEffect(() => {
         const fetchInterviewFeedback = async () => {
+            // Get the last started interview ID from local storage
+            const lastInterviewId = localStorage.getItem('lastInterviewId');
+            
+            if (!lastInterviewId) {
+                setError('No recent interview found.');
+                setLoading(false);
+                return;
+            }
+            
             try {
-                // Get the last started interview ID from local storage
-                const lastInterviewId = localStorage.getItem('lastInterviewId');
+
+                const response = await apiService.getInterviewFeedback(lastInterviewId);
                 
-                if (!lastInterviewId) {
-                    setError('No recent interview found.');
-                    setLoading(false);
-                    return;
-                }
-
-                const response = await axios.get(`/api/v1/interviews/${lastInterviewId}/feedback`, {
-                    headers: {
-                        'X-User-ID': 1  // Hardcoded user ID for now
-                    }
-                });
-
+                console.log(response);
                 // Parse the feedback 
                 const feedbackContent = response.data.message;
                 // Try to parse the feedback, with fallback to default structure

@@ -7,7 +7,7 @@ const api = axios.create({
 //For now
 const USER_ID = 1;
 
-export const sendMessage = async (message, interviewId) => {
+const sendMessage = async (message, interviewId) => {
     try
     {
         const response = await api.post(`/interviews/${interviewId}/message`, {
@@ -36,8 +36,17 @@ export const sendMessage = async (message, interviewId) => {
     }
 };
 
+const getInterviewFeedback = async(interviewId) => {
+    const response = await api.get(`/interviews/${interviewId}/feedback`, {
+        headers: {
+            'X-User-ID': USER_ID
+        }
+    });
+    console.log(response.data.choices[0]);
+    return response.data.choices[0].message.content;
+}
 
-export const createInterviewSession = async (parameters, jobDescription) => {
+const createInterviewSession = async (parameters, jobDescription) => {
     const load = JSON.stringify(parameters);
     console.log(load);
 
@@ -63,7 +72,7 @@ export const createInterviewSession = async (parameters, jobDescription) => {
     }
 };
 
-export const getTranscript = async (interviewId) => {
+const getTranscript = async (interviewId) => {
 
     try{
 
@@ -87,7 +96,7 @@ export const getTranscript = async (interviewId) => {
     }
 }
 
-export const evaluateResume = async (resume, jobDescription = '', progressCb) => {
+const evaluateResume = async (resume, jobDescription = '', progressCb) => {
     const formData = new FormData();
     formData.append('file', resume, resume.name);
     
@@ -128,3 +137,7 @@ export const evaluateResume = async (resume, jobDescription = '', progressCb) =>
         throw error;  // Propagate the error for additional handling in ResumePage.jsx
     }
 };
+
+export default {
+    sendMessage, getInterviewFeedback, createInterviewSession, evaluateResume, getTranscript
+}

@@ -33,7 +33,7 @@ const sendMessage = async (req, res, next) => {
         return res.status(400).json({ error: 'Message is required' });
     }
 
-    const interviewId = req.params['interviewId'];
+    const interviewId = req.interviewId;
     
     //Retrieving current interview history
     const currentSessionData = await redisClient.hGet(`interviews:${req.userId}:${interviewId}`, 'history');
@@ -146,16 +146,17 @@ const create = async (req, res) => {
 
 const getData = async (req, res) => {
 
-    const interviewId = req.params['interviewId'];
-
-    if (!(await redisClient.exists(`interviews:${req.userId}:${interviewId}`))) return res.status(404).json({ error: "Interview not found" });
-
-    const interview = await redisClient.HGETALL(`interviews:${req.userId}:${interviewId}`);
+    const interview = await redisClient.HGETALL(`interviews:${req.userId}:${req.interviewId}`);
     // const history = fs.readFileSync();
 
     return res.status(200).json(interview);
 }
 
+const updateInterview = async (req, res) => {
+    
+
+}
+
 export default {
-    sendMessage, create, getData
+    sendMessage, create, getData, updateInterview
 }

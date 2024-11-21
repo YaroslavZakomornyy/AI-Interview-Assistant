@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './ResumePage.css';
-import { evaluateResume as apiEvaluateResume } from './api';
+import apiService from '../services/api-service';
 import FeedbackModal from './FeedbackMenu';
 import NavBar from './NavBar';
 
@@ -26,7 +26,7 @@ function ResumePage() {
       setFeedbackDetails(null);
       updateStatus("Uploading");
       try {
-        const res = await apiEvaluateResume(file, jobDescription, updateStatus);
+        const res = await apiService.evaluateResume(file, jobDescription, updateStatus);
         
         if (!res || !res.data || !res.data.message) {
           throw new Error('Invalid response format or missing feedback message');

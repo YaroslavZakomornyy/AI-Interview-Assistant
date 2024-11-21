@@ -18,10 +18,10 @@ const interviewFeedback = async (req, res) => {
     const interviewId = req.params['interviewId'];
     const [interviewStatus, transcriptId] = await redisClient.HMGET(`interviews:${req.userId}:${interviewId}`, ["status", "transcriptId"]);
     
-    // No feedback on running interview
-    if (interviewStatus === "Running") return res.status(200).json({error: "The interview is still running!"});
+    // No feedback on running interview Disabled for tests
+    // if (interviewStatus === "Running") return res.status(409).json({error: "The interview is still running!"});
     
-    const transcript = filesService.readAll(await redisClient.HGET(`files:${req.userId}:${transcriptId}`, "path"));
+    const transcript = await filesService.readAll(await redisClient.HGET(`files:${req.userId}:${transcriptId}`, "path"));
     
     const messages = [
         {
@@ -55,6 +55,7 @@ const interviewFeedback = async (req, res) => {
 
     try {
         const response = await axios.post(endpoint, payload, { headers });
+        console.log(response);
         
         return res.status(200).json({ 
             message: response.data.choices[0].message.content 

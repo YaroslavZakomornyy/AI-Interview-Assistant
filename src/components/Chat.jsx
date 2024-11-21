@@ -1,7 +1,4 @@
-import { sendMessage as apiSendMessage, 
-    createInterviewSession as apiCreateInterviewSession, 
-    getTranscript as apiGetTranscript 
-} from './api.js';
+import apiService from '../services/api-service';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Chat.css';
@@ -35,7 +32,7 @@ function Chat() {
             "int" : interviewStyle
         }
 
-        const interviewId = await apiCreateInterviewSession(parameters, jobDescription);
+        const interviewId = await apiService.createInterviewSession(parameters, jobDescription);
         setCurrentInterviewSession(interviewId);
         setStarted(true);
         setIsInterviewEnded(false);
@@ -46,7 +43,7 @@ function Chat() {
 
         try {
             // Use the existing getTranscript function from api.js
-            await apiGetTranscript(currentInterviewSession);
+            await apiService.getTranscript(currentInterviewSession);
         } catch (error) {
             console.error('Error getting transcript:', error);
         }
@@ -82,7 +79,7 @@ function Chat() {
         setChatMessages(prevMessages => [...prevMessages, { sender: 'user', text: message }]);
         setUserInput("");
         
-        const reply = await apiSendMessage(message, currentInterviewSession);
+        const reply = await apiService.sendMessage(message, currentInterviewSession);
         setChatMessages(prevMessages => [...prevMessages, { sender: 'ai', text: reply }]);
 
         // Check if the AI wants to end the interview
