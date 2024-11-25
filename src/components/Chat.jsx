@@ -6,6 +6,7 @@ import InterviewParameters from './interview-parameters/InterviewParameters';
 import TranscriptDisplay from './TranscriptDisplay';
 import axios from 'axios';
 import NavBar from './NavBar';
+import { FaMicrophone } from 'react-icons/fa'; // Install with: npm install react-icons
 
 function Chat() {
     const [chatMessages, setChatMessages] = useState([]); 
@@ -16,6 +17,7 @@ function Chat() {
     const navigate = useNavigate();
     const [showTranscript, setShowTranscript] = useState(false);
     const [transcript, setTranscript] = useState([]);
+    const [isListening, setIsListening] = useState(false); // New state for microphone
 
     const MAX_CHARS = 500;
 
@@ -140,6 +142,18 @@ function Chat() {
                                     onClick={getTranscript}
                                 >
                                     Get Transcript
+                                </button>
+                                <button
+                                    className={`mic-button-container`}
+                                    // onClick={toggleListening}
+                                    disabled={isInterviewEnded}
+                                >
+                                    <FaMicrophone
+                                    />
+                                {/* style={{
+                                            color: listening ? 'red' : 'white',
+                                            fontSize: '20px',
+                                        }} */}
                                 </button>
                                 <button 
                                     className="submit-button" 

@@ -271,3 +271,40 @@
   margin-top: 1rem;
   padding: 1rem;
 }
+
+.mic-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.mic-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.mic-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.microphone-button.listening {
+  background-color: #10B981; /* Green to indicate active listening */
+}
+
+.mic-button-container {
+  background-color: #5558DD;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  border-radius: 8px;
+  transition: background-color 0.2s, transform 0.2s;
+}
