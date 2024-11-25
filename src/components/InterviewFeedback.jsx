@@ -67,6 +67,7 @@ const FeedbackPage = () => {
 
     return (
         <div className="chat-container-with-parameters">
+            <NavBar/>
             <div className="chat-section">
                 <h2 className="chatbox-heading">Interview Feedback</h2>
                 {feedback ? (

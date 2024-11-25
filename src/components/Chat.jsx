@@ -98,6 +98,7 @@ function Chat() {
 
     return (
         <div className="chat-container-with-parameters">
+            <NavBar/>
             {started && (
                 <div className="chat-section">
                     <div className="chatbox-heading">AI Interview Assistant</div>

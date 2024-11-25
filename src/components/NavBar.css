@@ -1,27 +1,35 @@
-/* NavBar.css */
-
-/* Custom navbar styles */
 .custom-navbar {
-    background-color: #eef2ff; /* Adjust this color to match your page background */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional shadow */
-    padding: 1rem 0;
+    background-color: #3a1f75; /* Darker purple to complement the background */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    padding: 0.8rem 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
 }
-  
+
 .navbar-nav {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 2rem; /* Space between navigation items */
+    gap: 1.5rem;
 }
 
 .nav-link {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 500;
-    color: #4a90e2; /* Matches blue-purple theme */
+    color: #ffffff; /* White text for better contrast */
     text-decoration: none;
     transition: color 0.3s ease;
+    padding: 0.3rem 0.8rem;
 }
 
 .nav-link:hover {
-    color: #7b61ff; /* Hover effect with a purple accent */
+    color: #a794ff; /* Light purple for hover state */
+}
+
+/* Add margin to main content to prevent navbar overlap */
+.home-page, .resume-page {
+    margin-top: 3.5rem;
 }
