@@ -142,12 +142,6 @@ function Chat() {
                                 </button>
                                 <button 
                                     className="submit-button" 
-                                    onClick={handleFeedbackClick}
-                                >
-                                    View Feedback
-                                </button>
-                                <button 
-                                    className="submit-button" 
                                     onClick={fetchChatResponse}
                                     disabled={isInterviewEnded}
                                 >
