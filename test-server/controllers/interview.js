@@ -153,7 +153,14 @@ const getData = async (req, res) => {
 }
 
 const updateInterview = async (req, res) => {
-    
+    const state = req.body.state;
+
+    if (!state) return res.status(400).json({error: "state is required"});
+
+    switch(state){
+        case "Concluded":
+            
+    }
 
 }
 

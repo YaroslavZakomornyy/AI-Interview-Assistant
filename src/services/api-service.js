@@ -42,8 +42,8 @@ const getInterviewFeedback = async(interviewId) => {
             'X-User-ID': USER_ID
         }
     });
-    console.log(response.data.choices[0]);
-    return response.data.choices[0].message.content;
+    console.log(response);
+    return response.data;
 }
 
 const createInterviewSession = async (parameters, jobDescription) => {

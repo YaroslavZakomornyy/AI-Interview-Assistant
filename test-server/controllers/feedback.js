@@ -26,13 +26,13 @@ const interviewFeedback = async (req, res) => {
     const messages = [
         {
             "role": "system",
-            "content": "Analyze the provided interview transcript. Provide comprehensive feedback. " +
-                       "If possible, give a JSON response with: " +
+            "content": "Analyze the performance of the interviee in the provided interview transctipt. Provide comprehensive, but concise feedback. " +
+                       "Return a JSON with: " +
                        "{ 'overallScore': number (0-100), " +
                        "'positiveAspects': string, " +
                        "'negativeAspects': string, " +
                        "'improvementTips': string[] } " +
-                       "If you cannot generate a structured JSON, provide a detailed textual feedback."
+                       ""
         },
         {
             "role": "user",
@@ -50,15 +50,14 @@ const interviewFeedback = async (req, res) => {
         "messages": messages,
         "temperature": 0.7,
         "top_p": 0.95,
-        "max_tokens": 500
+        "max_tokens": 400
     };
 
     try {
         const response = await axios.post(endpoint, payload, { headers });
-        console.log(response);
         
         return res.status(200).json({ 
-            message: response.data.choices[0].message.content 
+            message: response.data.choices[0].message.content
         });
     }
     catch (err) {

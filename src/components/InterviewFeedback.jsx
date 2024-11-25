@@ -26,10 +26,10 @@ const FeedbackPage = () => {
             try {
 
                 const response = await apiService.getInterviewFeedback(lastInterviewId);
-                
-                console.log(response);
+            
                 // Parse the feedback 
-                const feedbackContent = response.data.message;
+                const feedbackContent = response.message;
+                console.log(response);
                 // Try to parse the feedback, with fallback to default structure
                 let parsedFeedback;
                 try {
