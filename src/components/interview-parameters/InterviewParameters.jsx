@@ -6,6 +6,15 @@ export default function InterviewParameters({ onStart }) {
   const [quality, setQuality] = useState("great");
   const [interviewType, setInterviewType] = useState("recruiter");
   const [jobDescription, setJobDescription] = useState();
+  const [resume, setResume] = useState(null); 
+
+  // Handle resume file selection
+  const handleResumeChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setResume(file);
+    }
+  };
 
   return (
     <div className="settings-container">
@@ -44,6 +53,16 @@ export default function InterviewParameters({ onStart }) {
         onChange={(e) => setJobDescription(e.target.value)}
         value={jobDescription}
       />
+
+      {/* Resume Attachment */}
+      <label htmlFor="resume-upload">Attach your resume (PDF)</label>
+      <input
+        type="file"
+        id="resume-upload"
+        accept=".pdf"
+        onChange={handleResumeChange}
+      />
+      {resume && <p>{resume.name}</p>} {/* Display the file name once it's selected */}
 
       {/* Start Button */}
       <button
