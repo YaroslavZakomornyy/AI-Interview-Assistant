@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useLocation } from 'react-router-dom';
-import './Chat.css'; // Reuse styling for consistency
 import NavBar from './NavBar';
 import apiService from '../services/api-service';
-
+import './InterviewFeedback.css';
 
 const FeedbackPage = () => {
     const [feedback, setFeedback] = useState(null);
@@ -14,28 +12,20 @@ const FeedbackPage = () => {
 
     useEffect(() => {
         const fetchInterviewFeedback = async () => {
-            // Get the last started interview ID from local storage
             const lastInterviewId = localStorage.getItem('lastInterviewId');
-            
             if (!lastInterviewId) {
                 setError('No recent interview found.');
                 setLoading(false);
                 return;
             }
-            
             try {
-
                 const response = await apiService.getInterviewFeedback(lastInterviewId);
-            
-                // Parse the feedback 
                 const feedbackContent = response.message;
-                console.log(response);
-                // Try to parse the feedback, with fallback to default structure
+
                 let parsedFeedback;
                 try {
                     parsedFeedback = JSON.parse(feedbackContent);
-                } catch (parseError) {
-                    console.error('Failed to parse feedback:', parseError);
+                } catch {
                     parsedFeedback = {
                         overallScore: 0,
                         positiveAspects: feedbackContent || 'No detailed feedback available.',
@@ -43,8 +33,6 @@ const FeedbackPage = () => {
                         improvementTips: []
                     };
                 }
-                // const parsedFeedback = JSON.parse(feedbackContent);
-
                 setFeedback({
                     score: parsedFeedback.overallScore || 0,
                     positive: parsedFeedback.positiveAspects || 'No specific positive aspects noted.',
@@ -53,53 +41,62 @@ const FeedbackPage = () => {
                 });
                 setLoading(false);
             } catch (err) {
-                console.error('Error fetching feedback:', err);
                 setError('Failed to fetch interview feedback. Please try again.');
                 setLoading(false);
             }
         };
-
         fetchInterviewFeedback();
     }, []);
 
-    if (loading) return <div className="chat-container-with-parameters">Loading feedback...</div>;
-    if (error) return <div className="chat-container-with-parameters error-message">{error}</div>;
+    if (loading) return <div className="feedback-container">Loading feedback...</div>;
+    if (error) return <div className="feedback-container error-message">{error}</div>;
 
     return (
-        <div className="chat-container-with-parameters">
-            <NavBar/>
-            <div className="chat-section">
-                <h2 className="chatbox-heading">Interview Feedback</h2>
-                {feedback ? (
-                    <div className="feedback-container">
-                        <h3>Overall Score: {feedback.score}%</h3>
-                        <div>
-                            <h4>Positive Aspects:</h4>
-                            <p>{feedback.positive}</p>
+        <div className="feedback-page">
+            <NavBar />
+            {/* <div className="feedback-container"> */}
+                <div className="feedback-content">
+                    <h2 className="page-heading">Interview Feedback</h2>
+                    {feedback ? (
+                        <div className="feedback-box">
+                            {/* Score Section */}
+                            <div className="score-highlight">
+                                <h3>Overall Score</h3>
+                                <div className="score-circle">{feedback.score}%</div>
+                            </div>
+        
+                            {/* Positive Aspects */}
+                            <div className="feedback-section">
+                                <h4 className="category-heading">Positive Aspects</h4>
+                                <p style={{ textAlign: 'center' }}>{feedback.positive}</p>
+                            </div>
+        
+                            {/* Negative Aspects */}
+                            <div className="feedback-section">
+                                <h4 className="category-heading">Negative Aspects</h4>
+                                <p style={{ textAlign: 'center' }}>{feedback.negative}</p>
+                            </div>
+        
+                            {/* Areas for Improvement */}
+                            <div className="feedback-section">
+                                <h4 className="category-heading">Areas for Improvement</h4>
+                                {feedback.improvement.length > 0 ? (
+                                    <ul style={{ textAlign: 'center' }}>
+                                        {feedback.improvement.map((tip, index) => (
+                                            <li key={index} className="list-item">{tip}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p style={{ textAlign: 'center' }}>No specific improvement tips provided.</p>
+                                )}
+                            </div>
                         </div>
-                        <div>
-                            <h4>Negative Aspects:</h4>
-                            <p>{feedback.negative}</p>
-                        </div>
-                        <div>
-                            <h4>Areas for Improvement:</h4>
-                            {feedback.improvement.length > 0 ? (
-                                <ul>
-                                    {feedback.improvement.map((tip, index) => (
-                                        <li key={index}>{tip}</li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p>No specific improvement tips provided.</p>
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    <p>No feedback available.</p>
-                )}
+                    ) : (
+                        <p>No feedback available.</p>
+                    )}
+                </div>
             </div>
-        </div>
+        // </div>
     );
-};
-
+}    
 export default FeedbackPage;
