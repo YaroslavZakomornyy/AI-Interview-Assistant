@@ -1,11 +1,13 @@
 import dotenv from "dotenv";
-import axios from "axios";
 import redisClient from "../redis-client.js";
 import buildParameterQuery from "../services/interview-query-builder.js";
 import { randomUUID } from "crypto";
 import filesService from "../services/files-service.js";
 import fs from "fs";
 import wav from "node-wav"
+import messageSenderService from "../services/message-sender-service.js";
+import textToSpeechService from "../services/text-to-speech-service.js";
+
 // import SpeechRecognizerService from "../services/speech-recognizer-service.js";
 import { SpeechConfig, AudioConfig, SpeechRecognizer, ResultReason, AudioStreamFormat, AudioInputStream, CancellationDetails, CancellationReason } from 'microsoft-cognitiveservices-speech-sdk';
 
@@ -22,23 +24,14 @@ if (!apiKey || !endpoint || !speechKey)
     throw new Error("Please set API_KEY and ENDPOINT and CAPSTONE_AZURE_AI_SERVICE_KEY in your environment variables.");
 }
 
-const appendNewMessage = (messageHistory, newMessage, role) => {
-    messageHistory.push(
-        {
-            "role": role,
-            "content": newMessage
-        }
-    );
-}
-
 async function recognizeSpeechFromBuffer(buffer) {
     return new Promise((resolve, reject) => {
-        
+
         const result = wav.decode(buffer);
 
         const sampleRate = result.sampleRate; // e.g., 16000
-      const channels = result.channelData.length; // e.g., 1 for mono, 2 for stereo
-      const bitsPerSample = result.bitDepth || 16; // node-wav may not always provide bitDepth
+        const channels = result.channelData.length; // e.g., 1 for mono, 2 for stereo
+        const bitsPerSample = result.bitDepth || 16; // node-wav may not always provide bitDepth
 
         console.log('Sample Rate:', sampleRate);
         console.log('Channels:', channels);
@@ -46,9 +39,9 @@ async function recognizeSpeechFromBuffer(buffer) {
 
         // Create audio format matching the actual properties
         const audioFormat = AudioStreamFormat.getWaveFormatPCM(
-          sampleRate,
-          bitsPerSample,
-          channels
+            sampleRate,
+            bitsPerSample,
+            channels
         );
         const audioStream = AudioInputStream.createPushStream(audioFormat);
         audioStream.write(buffer);
@@ -62,30 +55,32 @@ async function recognizeSpeechFromBuffer(buffer) {
 
         recognizer.recognizeOnceAsync(
             (result) => {
-                switch (result.reason) {
-                  case ResultReason.RecognizedSpeech:
-                    resolve(result.text);
-                    break;
-                  case ResultReason.NoMatch:
-                    reject('No speech could be recognized.');
-                    break;
-                  case ResultReason.Canceled:
-                    const cancellation = CancellationDetails.fromResult(result);
-                    let message = `Speech recognition canceled: ${cancellation.reason}`;
-                    if (cancellation.reason === CancellationReason.Error) {
-                      message += `: ${cancellation.errorDetails}`;
-                    }
-                    reject(message);
-                    break;
-                  default:
-                    reject('Speech recognition failed with an unknown reason.');
-                    break;
+                switch (result.reason)
+                {
+                    case ResultReason.RecognizedSpeech:
+                        resolve(result.text);
+                        break;
+                    case ResultReason.NoMatch:
+                        reject('No speech could be recognized.');
+                        break;
+                    case ResultReason.Canceled:
+                        const cancellation = CancellationDetails.fromResult(result);
+                        let message = `Speech recognition canceled: ${cancellation.reason}`;
+                        if (cancellation.reason === CancellationReason.Error)
+                        {
+                            message += `: ${cancellation.errorDetails}`;
+                        }
+                        reject(message);
+                        break;
+                    default:
+                        reject('Speech recognition failed with an unknown reason.');
+                        break;
                 }
-              },
-              (err) => {
+            },
+            (err) => {
                 reject(`Error recognizing speech: ${err}`);
-              }
-            );
+            }
+        );
     });
 }
 
@@ -101,10 +96,32 @@ const sendVoice = async (req, res, next) => {
 
     try
     {
-        console.log("sending voice");
+        //Speech-to-text
         const textResult = await recognizeSpeechFromBuffer(audioBuffer);
+        console.log(textResult);
 
-        return res.status(200).send(textResult);
+        //Send the text message to AI
+        const reply = await messageSenderService.sendInterviewMessage(req.userId, req.interviewId, textResult);
+        console.log(reply.response?.data.choices[0].message.content);
+
+        //Text-to-speech
+        const audioResult = await textToSpeechService.textToSpeech(reply.response?.data.choices[0].message.content, speechKey, 'eastus');
+        const exampleAudioBuffer = Buffer.from(audioResult);
+        
+        // fs.writeFile("./data/tts.wav", exampleAudioBuffer, (err) => {
+        //     if (err) {
+        //         console.error('Error writing audio to file:', err);
+        //         return;
+        //     }
+        //     console.log(`Audio file saved to: ./data`);
+        // });
+
+        res.set({
+            'Content-Type': 'audio/wav',
+            'Content-Disposition': 'inline; filename="speech.wav"',
+        });
+
+        return res.send(exampleAudioBuffer);
     }
     catch (err)
     {
@@ -122,52 +139,14 @@ const sendMessage = async (req, res, next) => {
         return res.status(400).json({ error: 'Message is required' });
     }
 
-    const interviewId = req.interviewId;
+    const {response, error} = await messageSenderService.sendInterviewMessage(req.userId, req.interviewId, userMessage);
 
-    //Retrieving current interview history
-    const currentSessionData = await redisClient.hGet(`interviews:${req.userId}:${interviewId}`, 'history');
-    const history = JSON.parse(currentSessionData);
-    appendNewMessage(history, userMessage, 'user');
-
-    //Write the user message to the log. Doing this separately, since the history will be changed to fit the token count
-    fs.appendFileSync(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}.txt`, `[${new Date().toISOString()}]user: ${userMessage}\n`);
-
-    try
-    {
-        const headers = {
-            "Content-Type": "application/json",
-            "api-key": apiKey
-        };
-
-        // Request payload
-        const payload = {
-            "messages": history,
-            "temperature": 0.7,
-            "top_p": 0.95,
-            "max_tokens": 200
-        };
-
-        //Send a message and wait for the reply
-        const response = await axios.post(endpoint, payload, { headers });
-
-        //Write the AI message to the log
-        fs.appendFileSync(`${global.appRoot}/data/transcripts/${req.userId}/${interviewId}.txt`, `[${new Date().toISOString()}]interviewer: ${response.data.choices[0].message.content}\n`);
-
-        //Append the reply to the message history
-        appendNewMessage(history, response.data.choices[0].message.content, 'assistant');
-
-        await redisClient.hSet(`interviews:${req.userId}:${interviewId}`, {
-            owner: req.userId,
-            history: JSON.stringify(history)
-        });
-        // redisClient.push(req.userId, { owner: req.userId, history: history });
-
-        // Send it back to client
-        return res.status(200).json(response.data);
-    } catch (error)
-    {
-        // console.error(error);
+    if (error){
+        console.log(error);
         return res.status(500).json({ error: "Error with OpenAI" });
+    }
+    else{
+        return res.status(200).json(response.data);
     }
 }
 

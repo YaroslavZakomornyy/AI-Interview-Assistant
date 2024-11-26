@@ -120,7 +120,15 @@ function Chat() {
 
     const sendRecording = async (file) => {
         const res = await apiService.sendRecording(file, currentInterviewSession);
-        console.log(res);
+
+        //Convert the AudioBuffer to blob
+        const blob = new Blob([res.data], { type: res.headers['content-type'] });
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+
+        //Play it
+        audio.play();
+
     }
 
     const startRecording = async () => {
@@ -148,7 +156,7 @@ function Chat() {
 
         recorderRef.current.stopRecording(() => {
             const blob = recorderRef.current.getBlob();
-            downloadAudio(blob);
+            // downloadAudio(blob);
             // const blobURL = URL.createObjectURL(blob);
             // setBlobURL(blobURL);
             setIsListening(false);

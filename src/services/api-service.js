@@ -40,18 +40,19 @@ const sendRecording = async (recording, interviewId) => {
     if (!recording) return;
     const formData = new FormData();
     formData.append('audio', recording, 'recording.wav');
-            
+
     try
     {
         const response = await api.post(`/interviews/${interviewId}/voice`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 'X-User-ID': USER_ID
-            }
+            },
+            responseType: 'arraybuffer'
         });
 
-        console.log(response);
-        return response.data;
+        // console.log(response);
+        return response;
 
     } catch (error)
     {
@@ -69,7 +70,7 @@ const sendRecording = async (recording, interviewId) => {
     }
 }
 
-const getInterviewFeedback = async(interviewId) => {
+const getInterviewFeedback = async (interviewId) => {
     const response = await api.get(`/interviews/${interviewId}/feedback`, {
         headers: {
             'X-User-ID': USER_ID
@@ -97,7 +98,7 @@ const createInterviewSession = async (parameters, jobDescription) => {
 
 
         const interviewId = response.data.sessionId;
-        return interviewId; 
+        return interviewId;
 
     } catch (error)
     {
@@ -107,7 +108,8 @@ const createInterviewSession = async (parameters, jobDescription) => {
 
 const getTranscript = async (interviewId) => {
 
-    try{
+    try
+    {
 
         const response = await api.get(`/files/${interviewId}`, {
             headers: {
@@ -120,11 +122,12 @@ const getTranscript = async (interviewId) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', 'Transcript.txt'); 
+        link.setAttribute('download', 'Transcript.txt');
         link.click();
         link.remove();
     }
-    catch (err){
+    catch (err)
+    {
         console.error(err);
     }
 }
@@ -132,13 +135,15 @@ const getTranscript = async (interviewId) => {
 const evaluateResume = async (resume, jobDescription = '', progressCb) => {
     const formData = new FormData();
     formData.append('file', resume, resume.name);
-    
+
     // Optionally add job description if provided
-    if (jobDescription) {
+    if (jobDescription)
+    {
         formData.append('jobDescription', jobDescription);
     }
 
-    try {
+    try
+    {
         if (progressCb && typeof progressCb === "function") progressCb("Uploading");
 
         // Upload the resume
@@ -162,10 +167,11 @@ const evaluateResume = async (resume, jobDescription = '', progressCb) => {
         });
 
         if (progressCb && typeof progressCb === "function") progressCb("Done");
-        
+
         return response;
 
-    } catch (error) {
+    } catch (error)
+    {
         console.error('Error in evaluateResume:', error);
         throw error;  // Propagate the error for additional handling in ResumePage.jsx
     }
