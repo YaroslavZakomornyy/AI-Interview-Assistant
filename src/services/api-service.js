@@ -36,6 +36,39 @@ const sendMessage = async (message, interviewId) => {
     }
 };
 
+const sendRecording = async (recording, interviewId) => {
+    if (!recording) return;
+    const formData = new FormData();
+    formData.append('audio', recording, 'recording.wav');
+            
+    try
+    {
+        const response = await api.post(`/interviews/${interviewId}/voice`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'X-User-ID': USER_ID
+            }
+        });
+
+        console.log(response);
+        return response.data;
+
+    } catch (error)
+    {
+
+        if (error.code === "ERR_NETWORK")
+        {
+            return "Error! Server refused connection!";
+        }
+        else
+        {
+            console.error('Error:', error);
+            return "Error! " + error;
+        }
+
+    }
+}
+
 const getInterviewFeedback = async(interviewId) => {
     const response = await api.get(`/interviews/${interviewId}/feedback`, {
         headers: {
@@ -139,5 +172,5 @@ const evaluateResume = async (resume, jobDescription = '', progressCb) => {
 };
 
 export default {
-    sendMessage, getInterviewFeedback, createInterviewSession, evaluateResume, getTranscript
+    sendMessage, getInterviewFeedback, createInterviewSession, evaluateResume, getTranscript, sendRecording
 }

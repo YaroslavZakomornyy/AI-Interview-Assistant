@@ -1,278 +1,290 @@
 /* Flex container to evenly distribute space between chat and parameters */
 .chat-container-with-parameters {
-  display: flex;
-  height: 100vh; /* Full height */
-  width: 100vw; /* Full width */
-  background: linear-gradient(135deg, #4c1d95 0%, #1e3a8a 100%);
+    display: flex;
+    height: 100vh;
+    /* Full height */
+    width: 100vw;
+    /* Full width */
+    background: linear-gradient(135deg, #4c1d95 0%, #1e3a8a 100%);
 }
 
 /* Chat section styling */
 .chat-section {
-  flex: 1; /* Takes up half the screen */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 20px;
-  background-color: #1E1E2C; /* Dark background for chat area */
-  color: white;
+    flex: 1;
+    /* Takes up half the screen */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    background-color: #1E1E2C;
+    /* Dark background for chat area */
+    color: white;
 }
 
 .chatbox-heading {
-  font-size: 1.5rem;
-  text-align: center;
-  margin-bottom: 20px;
-  color: white;
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 20px;
+    color: white;
 }
 
 .chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  margin-bottom: 20px;
-  background-color: #28293D;
-  padding: 10px;
-  border-radius: 10px;
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    background-color: #28293D;
+    padding: 10px;
+    border-radius: 10px;
 }
 
 .chat-message {
-  margin-bottom: 10px;
-  padding: 10px;
-  border-radius: 5px;
-  color: white;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
 }
 
 .user-message {
-  background-color: #6366F1; /* Blue background for user messages */
-  text-align: right;
+    background-color: #6366F1;
+    /* Blue background for user messages */
+    text-align: right;
 }
 
 .ai-message {
-  background-color: #4F46E5; /* Purple background for AI messages */
-  text-align: left;
+    background-color: #4F46E5;
+    /* Purple background for AI messages */
+    text-align: left;
 }
 
 .chat-input {
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
 }
 
 .chat-input input {
-  flex: 1;
-  padding: 10px;
-  border-radius: 5px;
-  border: none;
-  background-color: #444;
-  color: white;
-  margin-right: 10px;
+    flex: 1;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    background-color: #444;
+    color: white;
+    margin-right: 10px;
 }
 
 .chat-input button {
-  background-color: #6366F1;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
+    background-color: #6366F1;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
 }
 
 .chat-input button:hover {
-  background-color: #4F46E5;
+    background-color: #4F46E5;
 }
 
 /* Interview Parameters section styling */
 .interview-parameters-section {
-  flex: 1; /* Takes up the other half of the screen */
-  padding: 20px;
-  background-color: #161625; /* Darker background for parameter section */
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+    flex: 1;
+    /* Takes up the other half of the screen */
+    padding: 20px;
+    background-color: #161625;
+    /* Darker background for parameter section */
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .interview-parameters-section h1 {
-  font-size: 1.5rem;
-  text-align: center;
-  margin-bottom: 20px;
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 20px;
 }
 
 .interview-parameters-section button {
-  background-color: #6366F1;
-  color: white;
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
+    background-color: #6366F1;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
 }
 
 .interview-parameters-section button:hover {
-  background-color: #4F46E5;
+    background-color: #4F46E5;
 }
 
 .interview-summary {
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #f0f4ff;
-  border: 1px solid #d0e2ff;
-  border-radius: 4px;
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f0f4ff;
+    border: 1px solid #d0e2ff;
+    border-radius: 4px;
 }
 
 .chat-controls {
-  display: flex;
-  gap: 8px;
+    display: flex;
+    gap: 8px;
 }
 
 .chat-buttons {
-  display: flex;
-  gap: 12px;
-  margin-left: auto;
+    display: flex;
+    gap: 12px;
+    margin-left: auto;
 }
 
 .transcript-container {
-  padding: 0 20px;
+    padding: 0 20px;
 }
 
 .transcript-button {
-  background-color: transparent;
-  color: white;
-  border: 2px solid rgb(99, 102, 241);
-  border-radius: 4px;
-  padding: 12px 24px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
+    background-color: transparent;
+    color: white;
+    border: 2px solid rgb(99, 102, 241);
+    border-radius: 4px;
+    padding: 12px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
 .transcript-button:hover {
-  background-color: rgba(99, 102, 241, 0.1);
+    background-color: rgba(99, 102, 241, 0.1);
 }
 
 .chat-input-wrapper {
-  background-color: #14141F;
-  border-radius: 16px;
-  padding: 20px;
+    background-color: #14141F;
+    border-radius: 16px;
+    padding: 20px;
 }
 
 .chat-textarea {
-  width: 100%;
-  min-height: 60px;
-  padding: 16px;
-  background-color: #14141F;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  color: #A0A0B0;
-  font-size: 16px;
-  resize: none;
-  margin-bottom: 16px;
+    width: 100%;
+    min-height: 60px;
+    padding: 16px;
+    background-color: #14141F;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: #A0A0B0;
+    font-size: 16px;
+    resize: none;
+    margin-bottom: 16px;
 }
 
 .chat-textarea::placeholder {
-  color: #666677;
+    color: #666677;
 }
 
 .chat-textarea:focus {
-  outline: none;
-  border-color: rgba(99, 102, 241, 0.5);
+    outline: none;
+    border-color: rgba(99, 102, 241, 0.5);
 }
 
 .chat-input-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
 }
 
 .char-counter {
-  color: #666677;
-  font-size: 14px;
+    color: #666677;
+    font-size: 14px;
 }
 
 .chat-buttons {
-  display: flex;
-  gap: 12px;
-  margin-left: auto;
+    display: flex;
+    gap: 12px;
+    margin-left: auto;
 }
 
 .submit-button {
-  background-color: #6366F1;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.2s;
+    background-color: #6366F1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 .submit-button:hover {
-  background-color: #5558DD;
+    background-color: #5558DD;
 }
 
 .feedback-container {
-  background-color: #28293D;
-  padding: 20px;
-  border-radius: 10px;
-  color: white;
+    background-color: #28293D;
+    padding: 20px;
+    border-radius: 10px;
+    color: white;
 }
 
-.feedback-container h3, .feedback-container h4 {
-  margin-bottom: 10px;
-  color: #6366F1;
+.feedback-container h3,
+.feedback-container h4 {
+    margin-bottom: 10px;
+    color: #6366F1;
 }
 
 .feedback-container ul {
-  list-style-type: disc;
-  margin-left: 20px;
+    list-style-type: disc;
+    margin-left: 20px;
 }
 
 .error-message {
-  color: red;
-  margin-top: 10px;
+    color: red;
+    margin-top: 10px;
 }
 
 /* Make the navbar fixed */
 .navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  background-color: #4c1d95; /* Purple-900 equivalent */
-  padding: 1rem;
-  display: flex;
-  justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background-color: #4c1d95;
+    /* Purple-900 equivalent */
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
 }
 
 /* Add spacing for the navbar */
 .chat-container-with-parameters {
-  margin-top: 4rem; /* Adds space below the navbar */
-  padding: 1rem;
-  display: flex;
-  gap: 1rem;
+    margin-top: 4rem;
+    /* Adds space below the navbar */
+    padding: 1rem;
+    display: flex;
+    gap: 1rem;
 }
 
 /* Update existing container styles */
 .chat-section {
-  flex: 1;
-  min-width: 0; /* Prevents flex items from overflowing */
+    flex: 1;
+    min-width: 0;
+    /* Prevents flex items from overflowing */
 }
 
 .interview-parameters-section {
-  width: 300px;
-  min-width: 300px;
+    width: 300px;
+    min-width: 300px;
 }
 
 /* Settings container adjustments */
 .settings-container {
-  width: 100%;
-  height: auto;
-  padding: 1rem;
+    width: 100%;
+    height: auto;
+    padding: 1rem;
 }
 
 /* Feedback container adjustments */
 .feedback-container {
-  margin-top: 1rem;
-  padding: 1rem;
+    margin-top: 1rem;
+    padding: 1rem;
 }
 
-.mic-button {
+/* .mic-button {
   background-color: transparent;
   border: none;
   cursor: pointer;
@@ -282,29 +294,47 @@
   padding: 8px;
   border-radius: 50%;
   transition: background-color 0.2s;
+} */
+
+.mic-button {
+    background-color: #6366F1;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    width: 100px;
+    height: 100px;
+    font-size: 24px;
 }
 
 .mic-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .mic-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
-.microphone-button.listening {
-  background-color: #10B981; /* Green to indicate active listening */
+/* .microphone-button.listening { */
+    /* background-color: #10B981; */
+    /* Green to indicate active listening */
+/* } */
+
+.mic-button.listening {
+    background-color: red;
+    box-shadow: rgba(255, 0, 0, 0.238) 0 0 14px 6px;
 }
 
-.mic-button-container {
-  background-color: #5558DD;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 15px;
-  border-radius: 8px;
-  transition: background-color 0.2s, transform 0.2s;
+
+.interview-speech-section {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    align-items: center;
 }

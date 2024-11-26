@@ -15,7 +15,6 @@ if (!apiKey || !endpoint)
 }
 
 const interviewFeedback = async (req, res) => {
-    const interviewId = req.params['interviewId'];
     const [interviewStatus, transcriptId] = await redisClient.HMGET(`interviews:${req.userId}:${interviewId}`, ["status", "transcriptId"]);
     
     // No feedback on running interview Disabled for tests
@@ -26,7 +25,9 @@ const interviewFeedback = async (req, res) => {
     const messages = [
         {
             "role": "system",
-            "content": "Analyze the performance of the interviee in the provided interview transctipt. Provide comprehensive, but concise feedback. " +
+            "content": "Analyze the performance of the interviewee in the provided interview transctipt. \
+            Provide comprehensive, but concise feedback (if possible, i.e. 2 sentence interviews are impossible to evaluate). \
+            Do not evaluate rows that start with the 'interviewer' role. " +
                        "Return a JSON with: " +
                        "{ 'overallScore': number (0-100), " +
                        "'positiveAspects': string, " +

@@ -5,15 +5,21 @@ import buildParameterQuery from "../services/interview-query-builder.js";
 import { randomUUID } from "crypto";
 import filesService from "../services/files-service.js";
 import fs from "fs";
+import wav from "node-wav"
+// import SpeechRecognizerService from "../services/speech-recognizer-service.js";
+import { SpeechConfig, AudioConfig, SpeechRecognizer, ResultReason, AudioStreamFormat, AudioInputStream, CancellationDetails, CancellationReason } from 'microsoft-cognitiveservices-speech-sdk';
 
 dotenv.config();
 
 const apiKey = process.env.API_KEY;
 const endpoint = process.env.CHAT_COMPLETION_ENDPOINT;
+const speechKey = process.env.CAPSTONE_AZURE_AI_SERVICE_KEY;
+const speechEndpoint = process.env.CAPSTONE_AZURE_AI_SERVICE_ENDPOINT;
+// const recognizer = new SpeechRecognizerService(speechKey, 'eastus');
 
-if (!apiKey || !endpoint)
+if (!apiKey || !endpoint || !speechKey)
 {
-    throw new Error("Please set API_KEY and ENDPOINT in your environment variables.");
+    throw new Error("Please set API_KEY and ENDPOINT and CAPSTONE_AZURE_AI_SERVICE_KEY in your environment variables.");
 }
 
 const appendNewMessage = (messageHistory, newMessage, role) => {
@@ -25,7 +31,90 @@ const appendNewMessage = (messageHistory, newMessage, role) => {
     );
 }
 
-//user's message
+async function recognizeSpeechFromBuffer(buffer) {
+    return new Promise((resolve, reject) => {
+        
+        const result = wav.decode(buffer);
+
+        const sampleRate = result.sampleRate; // e.g., 16000
+      const channels = result.channelData.length; // e.g., 1 for mono, 2 for stereo
+      const bitsPerSample = result.bitDepth || 16; // node-wav may not always provide bitDepth
+
+        console.log('Sample Rate:', sampleRate);
+        console.log('Channels:', channels);
+        console.log('Bits per Sample:', bitsPerSample);
+
+        // Create audio format matching the actual properties
+        const audioFormat = AudioStreamFormat.getWaveFormatPCM(
+          sampleRate,
+          bitsPerSample,
+          channels
+        );
+        const audioStream = AudioInputStream.createPushStream(audioFormat);
+        audioStream.write(buffer);
+        audioStream.close();
+
+        const audioConfig = AudioConfig.fromStreamInput(audioStream);
+        const speechConfig = SpeechConfig.fromSubscription(speechKey, 'eastus');
+        speechConfig.speechRecognitionLanguage = 'en-US';
+        const recognizer = new SpeechRecognizer(speechConfig, audioConfig);
+        // console.log(audioConfig, speechConfig, recognizer);
+
+        recognizer.recognizeOnceAsync(
+            (result) => {
+                switch (result.reason) {
+                  case ResultReason.RecognizedSpeech:
+                    resolve(result.text);
+                    break;
+                  case ResultReason.NoMatch:
+                    reject('No speech could be recognized.');
+                    break;
+                  case ResultReason.Canceled:
+                    const cancellation = CancellationDetails.fromResult(result);
+                    let message = `Speech recognition canceled: ${cancellation.reason}`;
+                    if (cancellation.reason === CancellationReason.Error) {
+                      message += `: ${cancellation.errorDetails}`;
+                    }
+                    reject(message);
+                    break;
+                  default:
+                    reject('Speech recognition failed with an unknown reason.');
+                    break;
+                }
+              },
+              (err) => {
+                reject(`Error recognizing speech: ${err}`);
+              }
+            );
+    });
+}
+
+const sendVoice = async (req, res, next) => {
+    // return res.status(500).send({error: "Failed to process audio"});
+
+    if (!req.file)
+    {
+        return res.status(400).send({ error: 'No file uploaded' });
+    }
+
+    const audioBuffer = req.file.buffer;
+
+    try
+    {
+        console.log("sending voice");
+        const textResult = await recognizeSpeechFromBuffer(audioBuffer);
+
+        return res.status(200).send(textResult);
+    }
+    catch (err)
+    {
+        console.error(err);
+        return res.status(500).send({ error: "Failed to process audio" });
+    }
+}
+
+
+//Sends a message from the user to the AI and back
 const sendMessage = async (req, res, next) => {
     const userMessage = req.body.message;
     if (!userMessage)
@@ -34,7 +123,7 @@ const sendMessage = async (req, res, next) => {
     }
 
     const interviewId = req.interviewId;
-    
+
     //Retrieving current interview history
     const currentSessionData = await redisClient.hGet(`interviews:${req.userId}:${interviewId}`, 'history');
     const history = JSON.parse(currentSessionData);
@@ -86,8 +175,7 @@ const sendMessage = async (req, res, next) => {
 const create = async (req, res) => {
 
     const parameters = await JSON.parse(req.body.parameters || "");
-    console.log(parameters);
-    if (req.body.parameters == "" || parameters.quality === undefined || parameters.beh === undefined)
+    if (req.body.parameters == "" || parameters.quality === undefined || parameters.beh === undefined || parameters.mode === undefined)
     {
         return res.status(400).json({ error: 'Some parameters are missing.' });
     }
@@ -96,7 +184,8 @@ const create = async (req, res) => {
     const jobDescription = req.body.jobDescription || undefined;
 
     //Create a folder for user's transcripts if non-existent
-    if (!fs.existsSync(`${global.appRoot}/data/transcripts/${req.userId}`)){
+    if (!fs.existsSync(`${global.appRoot}/data/transcripts/${req.userId}`))
+    {
         fs.mkdirSync(`${global.appRoot}/data/transcripts/${req.userId}`);
     }
 
@@ -108,22 +197,23 @@ const create = async (req, res) => {
         jobDescription: jobDescription
     });
 
-    const message = 
-        {
-            "role": "system",
-            "content": params
-        }
-    ;
+    const message =
+    {
+        "role": "system",
+        "content": params
+    }
+        ;
 
     //Generate a session id and push it
     const sessionId = randomUUID();
-    
+
     await redisClient.hSet(`interviews:${req.userId}:${sessionId}`, {
         history: JSON.stringify([message]),
         startedAt: new Date().toISOString(),
         status: "Running",
         transcriptId: sessionId,
         resumeId: "",
+        mode: parameters.mode,
         behavior: parameters.beh,
         workplace_quality: parameters.quality,
         interview_style: parameters.int,
@@ -141,7 +231,7 @@ const create = async (req, res) => {
     await filesService.cacheFile(req.userId, sessionId,
         `${global.appRoot}/data/transcripts/${req.userId}/${sessionId}.txt`, "transcript", "transcript");
 
-    return res.status(201).json({ sessionId: sessionId, transcriptId: sessionId});
+    return res.status(201).json({ sessionId: sessionId, transcriptId: sessionId });
 }
 
 const getData = async (req, res) => {
@@ -155,15 +245,16 @@ const getData = async (req, res) => {
 const updateInterview = async (req, res) => {
     const state = req.body.state;
 
-    if (!state) return res.status(400).json({error: "state is required"});
+    if (!state) return res.status(400).json({ error: "state is required" });
 
-    switch(state){
+    switch (state)
+    {
         case "Concluded":
-            
+
     }
 
 }
 
 export default {
-    sendMessage, create, getData, updateInterview
+    sendMessage, create, getData, updateInterview, sendVoice
 }
