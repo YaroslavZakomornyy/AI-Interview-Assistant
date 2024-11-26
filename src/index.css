@@ -56,3 +56,9 @@ button:hover {
   background-color: #3a3a3a;
   border-color: #646cff;
 }
+
+button:disabled{
+    background-color: #3a3a3a;
+    user-select: none;
+    pointer-events: none;
+}

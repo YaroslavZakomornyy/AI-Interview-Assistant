@@ -27,7 +27,7 @@ function Chat() {
         }
     }
 
-    const startInterview = async (behavior, quality, interviewStyle, jobDescription) => {
+    const startInterview = async (behavior, quality, interviewStyle, jobDescription, interviewMode, resume) => {
         const parameters = {
             "beh" : behavior,
             "quality": quality,
@@ -169,7 +169,7 @@ function Chat() {
             )}
             
             <div className="interview-parameters-section">
-                <InterviewParameters onStart={startInterview}/>
+                <InterviewParameters onStart={startInterview} areMutable={!started}/>
             </div>
         </div>
     );

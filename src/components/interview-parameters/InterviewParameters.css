@@ -14,6 +14,17 @@
   overflow-y: auto; /* Allow vertical scroll within the container */
 }
 
+.parameters-selections{
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.interview-mode{
+    display: flex;
+    justify-content: center;
+}
+
 label {
   font-weight: bold;
   font-size: 1.2rem;
