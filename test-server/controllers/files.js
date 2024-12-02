@@ -95,7 +95,7 @@ const remove = async (req, res) => {
 
     if (!await redisClient.exists(`files:${req.userId}:${fileId}`)) return res.status(404).json({ message: "File not found" });
 
-    fs.unlink(await redisClient.hGet(`files:${req.userId}:${fileId}`, "path"), async (err) => {
+    fs.unlink(await redisClient.HGET(`files:${req.userId}:${fileId}`, "path"), async (err) => {
         if (err) {
             console.error("Error deleting the file:", err);
             return res.sendStatus(500);

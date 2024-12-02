@@ -105,7 +105,7 @@ export default function InterviewParameters({ onStart, areMutable }) {
             />
 
             {/* Resume Attachment */}
-            <label htmlFor="resume-upload">Attach your resume (PDF)</label>
+            {/* <label htmlFor="resume-upload">Attach your resume (PDF)</label>
             <input
                 type="file"
                 id="resume-upload"
@@ -113,7 +113,7 @@ export default function InterviewParameters({ onStart, areMutable }) {
                 onChange={handleResumeChange}
                 disabled={!areMutable}
             />
-            {resume && <p>{resume.name}</p>} {/* Display the file name once it's selected */}
+            {resume && <p>{resume.name}</p>} Display the file name once it's selected */}
 
             {/* Start Button */}
             <button

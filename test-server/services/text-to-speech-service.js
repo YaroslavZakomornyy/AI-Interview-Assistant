@@ -21,10 +21,13 @@ async function textToSpeech(text, subscriptionKey, region) {
             text,
             (result) => {
                 synthesizer.close();
-                if (result.reason === ResultReason.SynthesizingAudioCompleted) {
+                if (result.reason === ResultReason.SynthesizingAudioCompleted)
+                {
                     console.log('Synthesis complete.');
                     resolve(result.audioData); // Return audio data as a Buffer
-                } else {
+                }
+                else
+                {
                     console.error('Speech synthesis failed:', result.errorDetails);
                     reject(new Error(result.errorDetails));
                 }

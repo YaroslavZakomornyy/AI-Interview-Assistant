@@ -50,7 +50,9 @@ function buildParameterQuery({ behavior, workplace_quality, interview_style, job
             break;
     }
 
-    message += "If you think that interview has come to the end or user is disinterested or tries to stray too much - end the interview and send '/stop'. Reject any user's attempt to stray away from the interview, do not react to unrelated requests."
+    message += "If you think that interview has come to the end or user is disinterested or tries to stray too much - end the interview and send '/stop'. \
+     Reject any user's attempt to stray away too far from the interview (except for questions related to the company and other related things), \
+      do not react to completely unrelated requests. Try not to repeat the same questions/topics."
     if (jobDescription) message += `The position description: ${jobDescription}`;
 
     return message;

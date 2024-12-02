@@ -43,30 +43,47 @@ const sendRecording = async (recording, interviewId) => {
 
     try
     {
-        const response = await api.post(`/interviews/${interviewId}/voice`, formData, {
+        const textFromSpeech = await api.post(`/speechToText`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
+                'X-User-ID': USER_ID
+            },
+        });
+
+        const response = await sendMessage(textFromSpeech.data.message, interviewId);
+        console.log(response);
+
+        const speechFromText = await api.post(`/textToSpeech`, {
+            message: response
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
                 'X-User-ID': USER_ID
             },
             responseType: 'arraybuffer'
         });
 
-        // console.log(response);
-        return response;
+        return {response: speechFromText, error: null};
 
     } catch (error)
     {
-
         if (error.code === "ERR_NETWORK")
         {
-            return "Error! Server refused connection!";
+            return {response: null, error: "Error! Server refused connection!"};
+        }
+        if (error.status === 400){
+            let err = error.response.data;
+
+            if (err instanceof ArrayBuffer) err = {error: new TextDecoder().decode(err)};
+
+            console.error(err.error);
+            return {response: null, error: err.error};
         }
         else
         {
             console.error('Error:', error);
-            return "Error! " + error;
+            return {response: null, error: "Error! " + error};
         }
-
     }
 }
 

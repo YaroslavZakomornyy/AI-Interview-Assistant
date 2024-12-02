@@ -15,29 +15,30 @@ if (!apiKey || !endpoint)
 }
 
 const interviewFeedback = async (req, res) => {
-    const [interviewStatus, transcriptId] = await redisClient.HMGET(`interviews:${req.userId}:${interviewId}`, ["status", "transcriptId"]);
+    const [interviewStatus, history, subEvaluations] = await redisClient.HMGET(`interviews:${req.userId}:${req.interviewId}`, ["status", "history", "subEvaluations"]);
     
     // No feedback on running interview Disabled for tests
     // if (interviewStatus === "Running") return res.status(409).json({error: "The interview is still running!"});
     
-    const transcript = await filesService.readAll(await redisClient.HGET(`files:${req.userId}:${transcriptId}`, "path"));
+    // const transcript = await filesService.readAll(await redisClient.HGET(`files:${req.userId}:${transcriptId}`, "path"));
     
     const messages = [
         {
             "role": "system",
-            "content": "Analyze the performance of the interviewee in the provided interview transctipt. \
+            "content": "Analyze the performance of the interviewee in the provided interview history. \
+             (Do not evaluate rows that start with the 'interviewer' role.) \
             Provide comprehensive, but concise feedback (if possible, i.e. 2 sentence interviews are impossible to evaluate). \
-            Do not evaluate rows that start with the 'interviewer' role. " +
-                       "Return a JSON with: " +
-                       "{ 'overallScore': number (0-100), " +
-                       "'positiveAspects': string, " +
-                       "'negativeAspects': string, " +
-                       "'improvementTips': string[] } " +
-                       ""
+                       Return a JSON with: \
+                       { 'overallScore': number (0-100), \
+                        'positiveAspects': string, \
+                        'negativeAspects': string, \
+                       'improvementTips': string[] }. \
+            Here are partial evaluation that were based on the interview before the history summarization. You don't have to incorporate them, but \
+            if you do, they should influence the final result. " + JSON.stringify(subEvaluations)
         },
         {
             "role": "user",
-            "content": transcript,
+            "content": JSON.stringify(history),
         },
     ];
     

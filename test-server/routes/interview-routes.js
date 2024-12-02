@@ -10,19 +10,20 @@ const router = express.Router();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.post('/v1/interviews/:interviewId/voice', upload.single('audio'), interviewController.sendVoice); //Send an audio message
+router.post('/v1/speechToText', upload.single('audio'), interviewController.speechToText);
 
 
 router.use(json());
 
 router.post('/v1/interviews', interviewController.create);  //Creates an interview session
 router.get('/v1/interviews/active', interviewController.getData);  //Retrieves user's active interview session
+router.post('/v1/textToSpeech', interviewController.textToSpeech);
 
 //Checks if the interviewId exists
 router.param('interviewId', async (req, res, next, interviewId) => {
-
+    
     if (!interviewId) return res.status(400).json({ error: 'interviewId is required!' });
-
+    
     if (!(await redisClient.exists(`interviews:${req.userId}:${interviewId}`))) return res.status(404).json({ error: "Interview not found" });
     req.interviewId = interviewId;
     next();

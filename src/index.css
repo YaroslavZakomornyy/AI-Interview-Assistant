@@ -52,7 +52,7 @@ button {
   transition: background-color 0.3s, border-color 0.3s;
 }
 
-button:hover {
+button:hover:disabled {
   background-color: #3a3a3a;
   border-color: #646cff;
 }
@@ -60,5 +60,6 @@ button:hover {
 button:disabled{
     background-color: #3a3a3a;
     user-select: none;
-    pointer-events: none;
+    /* pointer-events: none; */
+    cursor: not-allowed;
 }

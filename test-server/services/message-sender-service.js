@@ -2,10 +2,16 @@ import redisClient from "../redis-client.js";
 import dotenv from "dotenv";
 import fs from "fs";
 import axios from "axios";
+import { error } from "console";
 
 dotenv.config();
 const apiKey = process.env.API_KEY;
 const endpoint = process.env.CHAT_COMPLETION_ENDPOINT;
+
+if (!apiKey || !endpoint)
+{
+    throw new Error("No API_KEY or CHAT_COMPLETION_ENDPOINT provided");
+}
 
 const appendNewMessage = (messageHistory, newMessage, role) => {
     messageHistory.push(
@@ -17,17 +23,47 @@ const appendNewMessage = (messageHistory, newMessage, role) => {
 }
 
 
-const sendInterviewMessage = async (userId, interviewId, message) =>{
+const sendInterviewMessage = async (userId, interviewId, message) => {
     //Retrieving current interview history
-    const currentSessionData = await redisClient.hGet(`interviews:${userId}:${interviewId}`, 'history');
-    const history = JSON.parse(currentSessionData);
-    appendNewMessage(history, message, 'user');
-
-    //Write the user message to the log. Doing this separately, since the history will be changed to fit the token count
-    fs.appendFileSync(`${global.appRoot}/data/transcripts/${userId}/${interviewId}.txt`, `[${new Date().toISOString()}]user: ${message}\n`);
-
+    let [currentSessionData, tokenCount, subEvaluations] = await redisClient.HMGET(`interviews:${userId}:${interviewId}`,
+        ['history', 'historyTokenCount', 'subEvaluations']);
+    let history = JSON.parse(currentSessionData);
+    // console.log(tokenCount);
     try
     {
+        //If the history is too big, summarize it
+        if (tokenCount >= 1400)
+        {
+            //The first message is the original parameters prompt
+            const { response: resp, error } = await summarizeChatHistory(history.slice(1));
+            if (error)
+            {
+                console.error(error);
+                throw new Error(error);
+            }
+
+            console.log(resp);
+
+            const { summary, newTokenCount, evaluation, questions } = resp;
+
+            history = [history[0]];
+            appendNewMessage(history, JSON.stringify(questions), 'assistant');
+            appendNewMessage(history, summary, 'system'); 
+
+            subEvaluations = JSON.parse(subEvaluations);
+            subEvaluations.push(evaluation);
+            subEvaluations = JSON.stringify(subEvaluations);
+            
+            // tokenCount = newTokenCount
+        }
+
+
+        appendNewMessage(history, message, 'user');
+
+        //Write the user message to the log. Doing this separately, since the history will be changed to fit the token count
+        fs.appendFileSync(`${global.appRoot}/data/transcripts/${userId}/${interviewId}.txt`, `[${new Date().toISOString()}]user: ${message}\n`);
+
+
         const headers = {
             "Content-Type": "application/json",
             "api-key": apiKey
@@ -47,23 +83,73 @@ const sendInterviewMessage = async (userId, interviewId, message) =>{
         //Write the AI message to the log
         fs.appendFileSync(`${global.appRoot}/data/transcripts/${userId}/${interviewId}.txt`, `[${new Date().toISOString()}]interviewer: ${response.data.choices[0].message.content}\n`);
 
+        console.log(response.data);
         //Append the reply to the message history
         appendNewMessage(history, response.data.choices[0].message.content, 'assistant');
 
-        await redisClient.hSet(`interviews:${userId}:${interviewId}`, {
+        await redisClient.HSET(`interviews:${userId}:${interviewId}`, {
             owner: userId,
-            history: JSON.stringify(history)
+            history: JSON.stringify(history),
+            historyTokenCount: response.data.usage.prompt_tokens,
+            subEvaluations: subEvaluations
         });
-        // redisClient.push(req.userId, { owner: req.userId, history: history });
 
-        return {response: response, error: null};
+        return { response: response, error: null };
     } catch (error)
     {
-        return {response: null, error: error};
+        return { response: null, error: error };
+    }
+}
+
+const summarizeChatHistory = async (chatHistory) => {
+    try
+    {
+
+        if (!chatHistory) throw new Error("No chat history provided!");
+        console.log("Summarizing");
+
+        appendNewMessage(chatHistory, "Summarize all messages above this one. Include the most important context that will allow to continue \
+        the interview seamlessly. Return json with four properties: summary - actual summary, \
+        tokenCount: prompt_tokens that will be required to pass this summary, \
+        evaluation: another object with: \
+                       { 'overallScore': number (0-100), \
+                        'positiveAspects': string, \
+                        'negativeAspects': string, \
+                       'improvementTips': string[] }. \
+        questions: quickly summirize topics that already were asked by you or the 'assistant' \
+        Do not send the '```json' part, just the json itself.", "system");
+
+
+        const headers = {
+            "Content-Type": "application/json",
+            "api-key": apiKey
+        };
+
+        // Request payload
+        const payload = {
+            "messages": chatHistory,
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "max_tokens": 600
+        };
+
+
+        //Send a message and wait for the reply
+        let response = await axios.post(endpoint, payload, { headers });
+        
+        const json = JSON.parse(response.data.choices[0].message.content);
+        // response = ;
+
+        return { response: json, error: null };
+    }
+    catch (e)
+    {
+        console.error(e);
+        return { response: null, error: e };
     }
 }
 
 
-export default {    
+export default {
     sendInterviewMessage
 }

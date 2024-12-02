@@ -22,6 +22,8 @@ function Chat() {
     const [isListening, setIsListening] = useState(false); // New state for microphone
     const [interviewMode, setInterviewMode] = useState("text");
     const [blobURL, setBlobURL] = useState('');
+    const [isWaiting, setIsWaiting] = useState(false);
+    const [speechError, setSpeechError] = useState(false);
     const recorderRef = useRef(null);
     const streamRef = useRef(null); // Reference to store the MediaStream
 
@@ -41,6 +43,7 @@ function Chat() {
             "int": interviewStyle,
             "mode": interviewMode
         }
+
         setInterviewMode(interviewMode);
         const interviewId = await apiService.createInterviewSession(parameters, jobDescription);
         setCurrentInterviewSession(interviewId);
@@ -95,15 +98,18 @@ function Chat() {
         setChatMessages(prevMessages => [...prevMessages, { sender: 'user', text: message }]);
         setUserInput("");
 
-        const reply = await apiService.sendMessage(message, currentInterviewSession);
-        setChatMessages(prevMessages => [...prevMessages, { sender: 'ai', text: reply }]);
+        let reply = await apiService.sendMessage(message, currentInterviewSession);
 
         // Check if the AI wants to end the interview
         if (reply.includes('/stop'))
         {
+            // console.log(reply);
             setIsInterviewEnded(true);
-            endInterview();
+            reply = reply.replace('/stop', '');
         }
+
+        setChatMessages(prevMessages => [...prevMessages, { sender: 'ai', text: reply }]);
+
     };
 
     const downloadAudio = (blob, filename) => {
@@ -119,12 +125,23 @@ function Chat() {
     };
 
     const sendRecording = async (file) => {
-        const res = await apiService.sendRecording(file, currentInterviewSession);
+        setIsWaiting(true);
+        const {response, error} = await apiService.sendRecording(file, currentInterviewSession);
 
+        if (error){
+            setIsWaiting(false);
+            setSpeechError(error);
+            return;
+        }
         //Convert the AudioBuffer to blob
-        const blob = new Blob([res.data], { type: res.headers['content-type'] });
+        const blob = new Blob([response.data], { type: response.headers['content-type'] });
         const audioUrl = URL.createObjectURL(blob);
         const audio = new Audio(audioUrl);
+
+        audio.addEventListener('ended', function handler(event) {
+            setIsWaiting(false);
+            audio.removeEventListener('ended', handler);
+        });
 
         //Play it
         audio.play();
@@ -132,6 +149,7 @@ function Chat() {
     }
 
     const startRecording = async () => {
+        setSpeechError("");
         try
         {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -149,17 +167,18 @@ function Chat() {
         } catch (error)
         {
             console.error('Error accessing microphone:', error);
+            setIsListening(false);
         }
     };
 
     const stopRecording = () => {
-
         recorderRef.current.stopRecording(() => {
+            setIsListening(false);
             const blob = recorderRef.current.getBlob();
             // downloadAudio(blob);
             // const blobURL = URL.createObjectURL(blob);
             // setBlobURL(blobURL);
-            setIsListening(false);
+            
 
             // Release the microphone
             if (streamRef.current)
@@ -213,33 +232,26 @@ function Chat() {
                         ))}
                     </div>}
 
-                    {interviewMode === "text" && <div className="chat-input-wrapper">
-                        <textarea
+                    <div className="chat-input-wrapper">
+                        {interviewMode === "text" && <textarea
                             value={userInput}
                             onChange={handleInputChange}
                             className="chat-textarea"
                             placeholder={isInterviewEnded ? "Interview ended" : "Type your message..."}
                             onKeyDown={handleEnterPress}
                             disabled={isInterviewEnded}
-                        />
+                        />}
                         <div className="chat-input-footer">
-                            <span className="char-counter">
+                            {interviewMode === "text" && <span className="char-counter">
                                 {MAX_CHARS - userInput.length} characters remaining
-                            </span>
+                            </span>}
                             <div className="chat-buttons">
-                                {/* <button 
-                                    className="submit-button" 
-                                    onClick={endInterview}
-                                    disabled={isInterviewEnded}
-                                >
-                                    End Interview
-                                </button> */}
-                                <button
+                                {isInterviewEnded && <button
                                     className="transcript-button"
                                     onClick={getTranscript}
                                 >
                                     Get Transcript
-                                </button>
+                                </button>}
                                 {/* <button
                                     className={`mic-button-container`}
                                     // onClick={toggleListening}
@@ -252,21 +264,30 @@ function Chat() {
                                             fontSize: '20px',
                                         }} */}
                                 {/* </button> */}
-                                <button
+                                {interviewMode === "text" && !isInterviewEnded && <button
                                     className="submit-button"
                                     onClick={fetchChatResponse}
                                     disabled={isInterviewEnded}
                                 >
                                     Submit
-                                </button>
+                                </button>}
+
+                                {isInterviewEnded && <button
+                                    className="submit-button"
+                                    onClick={handleFeedbackClick}
+                                    disabled={!isInterviewEnded}
+                                >
+                                    Get feedback!
+                                </button>}
                             </div>
                         </div>
-                    </div>}
+                    </div>
 
                     {interviewMode === "speech" && <div className="interview-speech-section">
-                        <button className='mic-button' onClick={handleRecordStateChange}>
+                        <button className={`mic-button`} onClick={handleRecordStateChange} disabled={isWaiting}>
                             <FaMicrophone />
                         </button>
+                        <span style={{color: "red"}}>{speechError}</span>
                     </div>}
 
                 </div>

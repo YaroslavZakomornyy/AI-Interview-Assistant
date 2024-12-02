@@ -16,8 +16,6 @@ dotenv.config();
 const apiKey = process.env.API_KEY;
 const endpoint = process.env.CHAT_COMPLETION_ENDPOINT;
 const speechKey = process.env.CAPSTONE_AZURE_AI_SERVICE_KEY;
-const speechEndpoint = process.env.CAPSTONE_AZURE_AI_SERVICE_ENDPOINT;
-// const recognizer = new SpeechRecognizerService(speechKey, 'eastus');
 
 if (!apiKey || !endpoint || !speechKey)
 {
@@ -58,10 +56,10 @@ async function recognizeSpeechFromBuffer(buffer) {
                 switch (result.reason)
                 {
                     case ResultReason.RecognizedSpeech:
-                        resolve(result.text);
+                        resolve({ response: result.text, error: null });
                         break;
                     case ResultReason.NoMatch:
-                        reject('No speech could be recognized.');
+                        reject({ response: null, error: 'No speech recognized' });
                         break;
                     case ResultReason.Canceled:
                         const cancellation = CancellationDetails.fromResult(result);
@@ -70,22 +68,21 @@ async function recognizeSpeechFromBuffer(buffer) {
                         {
                             message += `: ${cancellation.errorDetails}`;
                         }
-                        reject(message);
+                        reject({ response: null, error: message });
                         break;
                     default:
-                        reject('Speech recognition failed with an unknown reason.');
+                        reject({ response: null, error: 'Speech recognition failed with an unknown reason.' });
                         break;
                 }
             },
             (err) => {
-                reject(`Error recognizing speech: ${err}`);
+                reject({ response: null, error: `Error recognizing speech: ${err}` });
             }
         );
     });
 }
 
-const sendVoice = async (req, res, next) => {
-    // return res.status(500).send({error: "Failed to process audio"});
+const speechToText = async (req, res, next) => {
 
     if (!req.file)
     {
@@ -97,56 +94,62 @@ const sendVoice = async (req, res, next) => {
     try
     {
         //Speech-to-text
-        const textResult = await recognizeSpeechFromBuffer(audioBuffer);
+        const { response: textResult, error } = await recognizeSpeechFromBuffer(audioBuffer);
         console.log(textResult);
+        if (error) throw new Error(error);
 
-        //Send the text message to AI
-        const reply = await messageSenderService.sendInterviewMessage(req.userId, req.interviewId, textResult);
-        console.log(reply.response?.data.choices[0].message.content);
-
-        //Text-to-speech
-        const audioResult = await textToSpeechService.textToSpeech(reply.response?.data.choices[0].message.content, speechKey, 'eastus');
-        const exampleAudioBuffer = Buffer.from(audioResult);
-        
-        // fs.writeFile("./data/tts.wav", exampleAudioBuffer, (err) => {
-        //     if (err) {
-        //         console.error('Error writing audio to file:', err);
-        //         return;
-        //     }
-        //     console.log(`Audio file saved to: ./data`);
-        // });
-
-        res.set({
-            'Content-Type': 'audio/wav',
-            'Content-Disposition': 'inline; filename="speech.wav"',
-        });
-
-        return res.send(exampleAudioBuffer);
+        return res.status(200).json({ message: textResult });
     }
     catch (err)
     {
-        console.error(err);
-        return res.status(500).send({ error: "Failed to process audio" });
+        console.error("Error:", err);
+        if (err.error == "No speech recognized")
+        {
+            return res.status(400).json({ error: "No speech recognized. Try again" });
+        }
+        return res.status(500).json({ error: "Failed to process audio" });
     }
+}
+
+const textToSpeech = async (req, res, next) => {
+    const message = req.body?.message;
+
+    if (!req.body || !message){
+        return res.status(400).json({error: 'Message is required'});
+    }
+
+    //Text-to-speech
+    const audioResult = await textToSpeechService.textToSpeech(message, speechKey, 'eastus');
+    const exampleAudioBuffer = Buffer.from(audioResult);
+
+    res.set({
+        'Content-Type': 'audio/wav',
+        'Content-Disposition': 'inline; filename="speech.wav"',
+    });
+
+    return res.send(exampleAudioBuffer);
 }
 
 
 //Sends a message from the user to the AI and back
 const sendMessage = async (req, res, next) => {
-    const userMessage = req.body.message;
-    if (!userMessage)
+
+    const userMessage = req.body?.message;
+    if (!req.body || !userMessage)
     {
         return res.status(400).json({ error: 'Message is required' });
     }
 
-    const {response, error} = await messageSenderService.sendInterviewMessage(req.userId, req.interviewId, userMessage);
+    const { response, error } = await messageSenderService.sendInterviewMessage(req.userId, req.interviewId, userMessage);
 
-    if (error){
+    if (error)
+    {
         console.log(error);
         return res.status(500).json({ error: "Error with OpenAI" });
     }
-    else{
-        return res.status(200).json(response.data);
+    else
+    {
+        return res.status(200).json(response?.data);
     }
 }
 
@@ -154,10 +157,18 @@ const sendMessage = async (req, res, next) => {
 const create = async (req, res) => {
 
     const parameters = await JSON.parse(req.body.parameters || "");
-    if (req.body.parameters == "" || parameters.quality === undefined || parameters.beh === undefined || parameters.mode === undefined)
+
+    if (req.body.parameters == "" || parameters.quality === undefined || parameters.beh === undefined)
     {
         return res.status(400).json({ error: 'Some parameters are missing.' });
     }
+
+    //Check the mode
+    if (parameters.mode !== "speech" && parameters.mode !== "text")
+    {
+        return res.status(400).json({ error: "Interview mode can only be either 'speech' or 'text'" });
+    }
+
 
     //Either get the description or set it as nothing
     const jobDescription = req.body.jobDescription || undefined;
@@ -180,16 +191,17 @@ const create = async (req, res) => {
     {
         "role": "system",
         "content": params
-    }
-        ;
+    };
 
     //Generate a session id and push it
     const sessionId = randomUUID();
 
-    await redisClient.hSet(`interviews:${req.userId}:${sessionId}`, {
+    await redisClient.HSET(`interviews:${req.userId}:${sessionId}`, {
         history: JSON.stringify([message]),
+        subEvaluations: JSON.stringify([]),
+        historyTokenCount: 0,
         startedAt: new Date().toISOString(),
-        status: "Running",
+        status: "Active",
         transcriptId: sessionId,
         resumeId: "",
         mode: parameters.mode,
@@ -198,7 +210,8 @@ const create = async (req, res) => {
         interview_style: parameters.int,
         jobDescriptionId: "",
     });
-    //1 hours
+
+    //1 hour
     const INTERVIEW_TTL_SECONDS = 1 * 60 * 60;
 
     //Set 1 hour expiration time. It is updated on each interaction. The expiration will be cancelled if the status changes to "Finished"
@@ -228,12 +241,12 @@ const updateInterview = async (req, res) => {
 
     switch (state)
     {
-        case "Concluded":
+        case "Finished":
 
     }
 
 }
 
 export default {
-    sendMessage, create, getData, updateInterview, sendVoice
+    sendMessage, create, getData, updateInterview, speechToText, textToSpeech
 }
