@@ -8,6 +8,15 @@ const api = axios.create({
 const USER_ID = 1;
 
 const sendMessage = async (message, interviewId) => {
+
+    if (!message) return {error: "message is required"};
+    if (!interviewId) return {error: "interviewId is required"};
+
+    if (typeof message !== 'string' && !(message instanceof String))
+    {
+        return {error: "message must be a string"};
+    }
+
     try
     {
         const response = await api.post(`/interviews/${interviewId}/message`, {
@@ -18,25 +27,57 @@ const sendMessage = async (message, interviewId) => {
                 'X-User-ID': USER_ID
             }
         });
-        return await response.data.choices[0].message.content;
+        return { response: await response.data.choices[0].message.content };
 
     } catch (error)
     {
 
         if (error.code === "ERR_NETWORK")
         {
-            return "Error! Server refused connection!";
+            return { error: "Error! Server refused connection!" };
         }
         else
         {
             console.error('Error:', error);
-            return "Error! " + error;
+            return { error: "Error! " + error };
         }
 
     }
 };
 
-const sendRecording = async (recording, interviewId) => {
+const textToSpeech = async (message) => {
+    if (!message) return {error: "message is required"};
+
+    if (typeof message !== 'string' && !(message instanceof String))
+    {
+        return {error: "message must be a string"};
+    }
+
+    try
+    {
+        const speechFromText = await api.post(`/textToSpeech`, {
+            message
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-ID': USER_ID
+            },
+            responseType: 'arraybuffer'
+        });
+
+        return { response: speechFromText };
+    }
+    catch (err)
+    {
+        if (err instanceof ArrayBuffer) err = { error: new TextDecoder().decode(err) };
+
+        console.error(err);
+        return { error: err.error };
+    }
+
+}
+
+const speechToText = async (recording) => {
     if (!recording) return;
     const formData = new FormData();
     formData.append('audio', recording, 'recording.wav');
@@ -50,39 +91,24 @@ const sendRecording = async (recording, interviewId) => {
             },
         });
 
-        const response = await sendMessage(textFromSpeech.data.message, interviewId);
-        console.log(response);
-
-        const speechFromText = await api.post(`/textToSpeech`, {
-            message: response
-        }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-User-ID': USER_ID
-            },
-            responseType: 'arraybuffer'
-        });
-
-        return {response: speechFromText, error: null};
+        return { response: textFromSpeech };
 
     } catch (error)
     {
         if (error.code === "ERR_NETWORK")
         {
-            return {response: null, error: "Error! Server refused connection!"};
+            return { error: "Error! Server refused connection!" };
         }
-        if (error.status === 400){
+        if (error.status === 400)
+        {
             let err = error.response.data;
-
-            if (err instanceof ArrayBuffer) err = {error: new TextDecoder().decode(err)};
-
             console.error(err.error);
-            return {response: null, error: err.error};
+            return { error: err.error };
         }
         else
         {
             console.error('Error:', error);
-            return {response: null, error: "Error! " + error};
+            return { error: "Error! " + error };
         }
     }
 }
@@ -93,13 +119,11 @@ const getInterviewFeedback = async (interviewId) => {
             'X-User-ID': USER_ID
         }
     });
-    console.log(response);
-    return response.data;
+    return response;
 }
 
 const createInterviewSession = async (parameters, jobDescription) => {
     const load = JSON.stringify(parameters);
-    console.log(load);
 
     try
     {
@@ -115,11 +139,12 @@ const createInterviewSession = async (parameters, jobDescription) => {
 
 
         const interviewId = response.data.sessionId;
-        return interviewId;
+        return {response: interviewId};
 
     } catch (error)
     {
         console.error('Error:', error);
+        return {error: "Connection refused"};
     }
 };
 
@@ -195,5 +220,5 @@ const evaluateResume = async (resume, jobDescription = '', progressCb) => {
 };
 
 export default {
-    sendMessage, getInterviewFeedback, createInterviewSession, evaluateResume, getTranscript, sendRecording
+    sendMessage, getInterviewFeedback, createInterviewSession, evaluateResume, getTranscript, speechToText, textToSpeech
 }

@@ -114,20 +114,28 @@ const speechToText = async (req, res, next) => {
 const textToSpeech = async (req, res, next) => {
     const message = req.body?.message;
 
-    if (!req.body || !message){
-        return res.status(400).json({error: 'Message is required'});
+    if (!req.body || !message)
+    {
+        return res.status(400).json({ error: 'Message is required' });
     }
 
-    //Text-to-speech
-    const audioResult = await textToSpeechService.textToSpeech(message, speechKey, 'eastus');
-    const exampleAudioBuffer = Buffer.from(audioResult);
+    try
+    {
+        //Text-to-speech
+        const audioResult = await textToSpeechService.textToSpeech(message, speechKey, 'eastus');
+        const exampleAudioBuffer = Buffer.from(audioResult);
 
-    res.set({
-        'Content-Type': 'audio/wav',
-        'Content-Disposition': 'inline; filename="speech.wav"',
-    });
+        res.set({
+            'Content-Type': 'audio/wav',
+            'Content-Disposition': 'inline; filename="speech.wav"',
+        });
 
-    return res.send(exampleAudioBuffer);
+        return res.status(200).send(exampleAudioBuffer);
+    }
+    catch(error){
+        return res.status(500).json({error: error});
+    }
+    
 }
 
 

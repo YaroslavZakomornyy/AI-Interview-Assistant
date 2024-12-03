@@ -116,13 +116,13 @@ export default function InterviewParameters({ onStart, areMutable }) {
             {resume && <p>{resume.name}</p>} Display the file name once it's selected */}
 
             {/* Start Button */}
-            <button
+            {areMutable && <button
                 className="start-button"
                 onClick={() => onStart(behavior, quality, interviewType, jobDescription, interviewMode, resume)}
                 disabled={!areMutable}
             >
                 Start
-            </button>
+            </button>}
         </div>
     );
 }

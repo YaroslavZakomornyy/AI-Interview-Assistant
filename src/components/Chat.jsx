@@ -17,11 +17,8 @@ function Chat() {
     const [started, setStarted] = useState(false);
     const [isInterviewEnded, setIsInterviewEnded] = useState(false);
     const navigate = useNavigate();
-    const [showTranscript, setShowTranscript] = useState(false);
-    const [transcript, setTranscript] = useState([]);
     const [isListening, setIsListening] = useState(false); // New state for microphone
     const [interviewMode, setInterviewMode] = useState("text");
-    const [blobURL, setBlobURL] = useState('');
     const [isWaiting, setIsWaiting] = useState(false);
     const [speechError, setSpeechError] = useState(false);
     const recorderRef = useRef(null);
@@ -43,12 +40,24 @@ function Chat() {
             "int": interviewStyle,
             "mode": interviewMode
         }
+        
+        try{
 
-        setInterviewMode(interviewMode);
-        const interviewId = await apiService.createInterviewSession(parameters, jobDescription);
-        setCurrentInterviewSession(interviewId);
-        setStarted(true);
-        setIsInterviewEnded(false);
+            
+            const {error, response: interviewId} = await apiService.createInterviewSession(parameters, jobDescription);
+            
+            if (error){
+                return;
+            }
+
+            setInterviewMode(interviewMode);
+            setCurrentInterviewSession(interviewId);
+            setStarted(true);
+            setIsInterviewEnded(false);
+        }
+        catch(error){
+            console.error(error);
+        }
     }
 
     const getTranscript = async () => {
@@ -98,7 +107,12 @@ function Chat() {
         setChatMessages(prevMessages => [...prevMessages, { sender: 'user', text: message }]);
         setUserInput("");
 
-        let reply = await apiService.sendMessage(message, currentInterviewSession);
+        let {response: reply, error} = await apiService.sendMessage(message, currentInterviewSession);
+
+        if (error){
+            console.error(error);
+            return;
+        }
 
         // Check if the AI wants to end the interview
         if (reply.includes('/stop'))
@@ -126,13 +140,39 @@ function Chat() {
 
     const sendRecording = async (file) => {
         setIsWaiting(true);
-        const {response, error} = await apiService.sendRecording(file, currentInterviewSession);
+        let { response, error } = await apiService.speechToText(file, currentInterviewSession);
 
-        if (error){
+        if (error)
+        {
             setIsWaiting(false);
             setSpeechError(error);
             return;
         }
+
+        ({ response, error } = await apiService.sendMessage(response.data.message, currentInterviewSession));
+        console.log(response);
+        if (error)
+        {
+            setIsWaiting(false);
+            setSpeechError(error);
+            return;
+        }
+
+        const shouldEnd = response.includes('/stop');
+
+        if (shouldEnd)
+        {
+            response = response.replace('/stop', '');
+        }
+
+        ({ response, error } = await apiService.textToSpeech(response));
+        if (error)
+        {
+            setIsWaiting(false);
+            setSpeechError(error);
+            return;
+        }
+
         //Convert the AudioBuffer to blob
         const blob = new Blob([response.data], { type: response.headers['content-type'] });
         const audioUrl = URL.createObjectURL(blob);
@@ -141,6 +181,7 @@ function Chat() {
         audio.addEventListener('ended', function handler(event) {
             setIsWaiting(false);
             audio.removeEventListener('ended', handler);
+            if (shouldEnd) setIsInterviewEnded(true);
         });
 
         //Play it
@@ -175,10 +216,6 @@ function Chat() {
         recorderRef.current.stopRecording(() => {
             setIsListening(false);
             const blob = recorderRef.current.getBlob();
-            // downloadAudio(blob);
-            // const blobURL = URL.createObjectURL(blob);
-            // setBlobURL(blobURL);
-            
 
             // Release the microphone
             if (streamRef.current)
@@ -186,7 +223,7 @@ function Chat() {
                 streamRef.current.getTracks().forEach((track) => track.stop());
             }
 
-            sendRecording(blob);
+            sendRecording(blob);    
         });
     };
 
@@ -252,18 +289,6 @@ function Chat() {
                                 >
                                     Get Transcript
                                 </button>}
-                                {/* <button
-                                    className={`mic-button-container`}
-                                    // onClick={toggleListening}
-                                    disabled={isInterviewEnded}
-                                >
-                                    <FaMicrophone
-                                    /> */}
-                                {/* style={{
-                                            color: listening ? 'red' : 'white',
-                                            fontSize: '20px',
-                                        }} */}
-                                {/* </button> */}
                                 {interviewMode === "text" && !isInterviewEnded && <button
                                     className="submit-button"
                                     onClick={fetchChatResponse}
@@ -283,11 +308,16 @@ function Chat() {
                         </div>
                     </div>
 
+
+                    {/* Speech mode */}
                     {interviewMode === "speech" && <div className="interview-speech-section">
-                        <button className={`mic-button`} onClick={handleRecordStateChange} disabled={isWaiting}>
+                        <div className='interviewer-picture'>
+                            <img src="/InterviewerPfpFemale.png"></img>
+                        </div>
+                        <button className={`mic-button`} onClick={handleRecordStateChange} disabled={isWaiting || isInterviewEnded}>
                             <FaMicrophone />
                         </button>
-                        <span style={{color: "red"}}>{speechError}</span>
+                        <span style={{ color: "red" }}>{speechError}</span>
                     </div>}
 
                 </div>
