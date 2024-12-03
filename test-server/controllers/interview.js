@@ -164,6 +164,7 @@ const sendMessage = async (req, res, next) => {
 
 const create = async (req, res) => {
 
+    // return res.sendStatus(200)
     const parameters = await JSON.parse(req.body.parameters || "");
 
     if (req.body.parameters == "" || parameters.quality === undefined || parameters.beh === undefined)

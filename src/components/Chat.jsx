@@ -3,11 +3,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Chat.css';
 import InterviewParameters from './interview-parameters/InterviewParameters';
-import TranscriptDisplay from './TranscriptDisplay';
-import axios from 'axios';
 import NavBar from './NavBar';
 import { FaMicrophone } from 'react-icons/fa'; // Install with: npm install react-icons
 import RecordRTC from 'recordrtc';
+import InterviewerProfilePicture from './interviewer-profile-picture/InterviewerProfilePicture';
 
 
 function Chat() {
@@ -21,8 +20,10 @@ function Chat() {
     const [interviewMode, setInterviewMode] = useState("text");
     const [isWaiting, setIsWaiting] = useState(false);
     const [speechError, setSpeechError] = useState(false);
+    const [audioUrl, setAudioUrl] = useState(null);
     const recorderRef = useRef(null);
     const streamRef = useRef(null); // Reference to store the MediaStream
+    const [shouldEnd, setShouldEnd] = useState(false);
 
     const MAX_CHARS = 500;
 
@@ -40,13 +41,15 @@ function Chat() {
             "int": interviewStyle,
             "mode": interviewMode
         }
-        
-        try{
 
-            
-            const {error, response: interviewId} = await apiService.createInterviewSession(parameters, jobDescription);
-            
-            if (error){
+        try
+        {
+
+
+            const { error, response: interviewId } = await apiService.createInterviewSession(parameters, jobDescription);
+
+            if (error)
+            {
                 return;
             }
 
@@ -55,7 +58,8 @@ function Chat() {
             setStarted(true);
             setIsInterviewEnded(false);
         }
-        catch(error){
+        catch (error)
+        {
             console.error(error);
         }
     }
@@ -107,9 +111,10 @@ function Chat() {
         setChatMessages(prevMessages => [...prevMessages, { sender: 'user', text: message }]);
         setUserInput("");
 
-        let {response: reply, error} = await apiService.sendMessage(message, currentInterviewSession);
+        let { response: reply, error } = await apiService.sendMessage(message, currentInterviewSession);
 
-        if (error){
+        if (error)
+        {
             console.error(error);
             return;
         }
@@ -140,6 +145,8 @@ function Chat() {
 
     const sendRecording = async (file) => {
         setIsWaiting(true);
+
+        //Convert speech to text
         let { response, error } = await apiService.speechToText(file, currentInterviewSession);
 
         if (error)
@@ -149,6 +156,7 @@ function Chat() {
             return;
         }
 
+        //Send the converted message 
         ({ response, error } = await apiService.sendMessage(response.data.message, currentInterviewSession));
         console.log(response);
         if (error)
@@ -158,13 +166,16 @@ function Chat() {
             return;
         }
 
-        const shouldEnd = response.includes('/stop');
+        //If the chat sent '/stop', we want to end the interview
+        const ended = response.includes('/stop');
 
-        if (shouldEnd)
+        if (ended)
         {
             response = response.replace('/stop', '');
+            setShouldEnd(true);
         }
 
+        //Convert text to speech
         ({ response, error } = await apiService.textToSpeech(response));
         if (error)
         {
@@ -173,20 +184,15 @@ function Chat() {
             return;
         }
 
-        //Convert the AudioBuffer to blob
+        //Convert the received AudioBuffer to blob
         const blob = new Blob([response.data], { type: response.headers['content-type'] });
-        const audioUrl = URL.createObjectURL(blob);
-        const audio = new Audio(audioUrl);
+        setAudioUrl(URL.createObjectURL(blob));
+    }
 
-        audio.addEventListener('ended', function handler(event) {
-            setIsWaiting(false);
-            audio.removeEventListener('ended', handler);
-            if (shouldEnd) setIsInterviewEnded(true);
-        });
-
-        //Play it
-        audio.play();
-
+    const onAiSpeechEnded = () => {
+        setIsWaiting(false);
+        if (shouldEnd) setIsInterviewEnded(true);
+        setAudioUrl(null);
     }
 
     const startRecording = async () => {
@@ -223,7 +229,7 @@ function Chat() {
                 streamRef.current.getTracks().forEach((track) => track.stop());
             }
 
-            sendRecording(blob);    
+            sendRecording(blob);
         });
     };
 
@@ -311,9 +317,9 @@ function Chat() {
 
                     {/* Speech mode */}
                     {interviewMode === "speech" && <div className="interview-speech-section">
-                        <div className='interviewer-picture'>
-                            <img src="/InterviewerPfpFemale.png"></img>
-                        </div>
+
+                        {/* <input type='file' onChange={(e) => setAudioUrl(URL.createObjectURL(e.target.files[0]))}></input> */}
+                        <InterviewerProfilePicture audioUrl={audioUrl} onSpeechEnded={onAiSpeechEnded} />
                         <button className={`mic-button`} onClick={handleRecordStateChange} disabled={isWaiting || isInterviewEnded}>
                             <FaMicrophone />
                         </button>
