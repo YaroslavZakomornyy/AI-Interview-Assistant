@@ -44,14 +44,9 @@ function Chat() {
 
         try
         {
-
-
             const { error, response: interviewId } = await apiService.createInterviewSession(parameters, jobDescription);
 
-            if (error)
-            {
-                return;
-            }
+            if (error) return;
 
             setInterviewMode(interviewMode);
             setCurrentInterviewSession(interviewId);

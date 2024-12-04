@@ -1,23 +1,15 @@
-import interviewController from '../controllers/interview.js';
-import feedbackController from '../controllers/feedback.js';
-import multer from 'multer';
-import { v4 as uuidv4 } from "uuid";
-import path from "path";
+
+import interviewController from '#controllers/interview.js';
+import feedbackController from '#controllers/feedback.js';
 import express, { json } from 'express';
-import redisClient from "../redis-client.js"
+import redisClient from "#src/redis-client.js"
 
 const router = express.Router();
-
-const upload = multer({ storage: multer.memoryStorage() });
-
-router.post('/v1/speechToText', upload.single('audio'), interviewController.speechToText);
-
 
 router.use(json());
 
 router.post('/v1/interviews', interviewController.create);  //Creates an interview session
-router.get('/v1/interviews/active', interviewController.getData);  //Retrieves user's active interview session
-router.post('/v1/textToSpeech', interviewController.textToSpeech);
+router.get('/v1/interviews/active', interviewController.getActive);  //Retrieves user's active interview session
 
 //Checks if the interviewId exists
 router.param('interviewId', async (req, res, next, interviewId) => {
@@ -29,9 +21,10 @@ router.param('interviewId', async (req, res, next, interviewId) => {
     next();
 });
 
-//These routes are guaranteed to receive the userId and InterviewId
+//These routes are guaranteed to receive valid userId and InterviewId
 router.get('/v1/interviews/:interviewId', interviewController.getData); //Returns details of the interview
-router.put('/v1/interviews/:interviewId', interviewController.updateInterview); //Get a feedback on the interview
+router.put('/v1/interviews/:interviewId', interviewController.updateInterview); //Update the state of the interview
+router.delete('/v1/interviews/:interviewId', interviewController.deleteInterview); //Delete an interview
 
 router.post('/v1/interviews/:interviewId/message', interviewController.sendMessage); //Send a message
 router.get('/v1/interviews/:interviewId/feedback', feedbackController.interviewFeedback); //Get a feedback on the interview

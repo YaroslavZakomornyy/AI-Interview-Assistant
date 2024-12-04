@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import interviewRoutes from './routes/interview-routes.js';
-import fileManagementRoutes from './routes/files-routes.js';
+import interviewRoutes from '#routes/interview-routes.js';
+import fileManagementRoutes from '#routes/files-routes.js';
 import { dirname} from 'path';
 import { fileURLToPath } from 'url';
 

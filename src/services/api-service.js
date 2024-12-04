@@ -122,6 +122,18 @@ const getInterviewFeedback = async (interviewId) => {
     return response;
 }
 
+const getActiveSession = async () => {
+    const response = await api.get(`/interviews/active`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'X-User-ID': USER_ID
+        }
+    });
+
+    console.log(response);
+    return response;
+}
+
 const createInterviewSession = async (parameters, jobDescription) => {
     const load = JSON.stringify(parameters);
 
@@ -220,5 +232,5 @@ const evaluateResume = async (resume, jobDescription = '', progressCb) => {
 };
 
 export default {
-    sendMessage, getInterviewFeedback, createInterviewSession, evaluateResume, getTranscript, speechToText, textToSpeech
+    sendMessage, getInterviewFeedback, createInterviewSession, evaluateResume, getTranscript, speechToText, textToSpeech, getActiveSession
 }

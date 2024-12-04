@@ -5,8 +5,19 @@ import LandingPage from './components/LandingPage';
 import HomePage from './components/HomePage';
 import ResumePage from './components/ResumePage';
 import FeedbackPage from './components/InterviewFeedback';
+import apiService from './services/api-service';
+import { useEffect } from 'react';
 
 function App() {
+
+    useEffect(() => {
+        const test = async () => {
+            const res = await apiService.getActiveSession();
+        }
+
+        test();
+    }, []);
+
   return (
     <Router>
       <Routes>

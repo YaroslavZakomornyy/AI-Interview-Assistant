@@ -1,16 +1,16 @@
 import dotenv from "dotenv";
-import redisClient from "@redis-client.js";
-import buildParameterQuery from "../services/interview-query-builder.js";
-import { randomUUID } from "crypto";
-import filesService from "@services/files-service.js";
-import fs from "fs";
 import wav from "node-wav"
-import messageSenderService from "../services/message-sender-service.js";
-import textToSpeechService from "../services/text-to-speech-service.js";
-import { getTranscriptPath } from "../utils/path-builder-util.js";
-
-// import SpeechRecognizerService from "../services/speech-recognizer-service.js";
-import { SpeechConfig, AudioConfig, SpeechRecognizer, ResultReason, AudioStreamFormat, AudioInputStream, CancellationDetails, CancellationReason } from 'microsoft-cognitiveservices-speech-sdk';
+import fs from "fs";
+import { SpeechConfig, AudioConfig, SpeechRecognizer, ResultReason, 
+    AudioStreamFormat, AudioInputStream, CancellationDetails, CancellationReason } from 'microsoft-cognitiveservices-speech-sdk';
+import { randomUUID } from "crypto";
+import redisClient from "#src/redis-client.js";
+import buildParameterQuery from "#services/interview-query-builder.js";
+import filesService from "#services/files-service.js";
+import messageSenderService from "#services/message-sender-service.js";
+import textToSpeechService from "#services/text-to-speech-service.js";
+import { getTranscriptPath } from "#utils/path-builder-util.js";
+import redisQueryService from "#services/redis-query-service.js";
 
 dotenv.config();
 
@@ -32,10 +32,6 @@ async function recognizeSpeechFromBuffer(buffer) {
         const channels = result.channelData.length; // e.g., 1 for mono, 2 for stereo
         const bitsPerSample = result.bitDepth || 16; // node-wav may not always provide bitDepth
 
-        console.log('Sample Rate:', sampleRate);
-        console.log('Channels:', channels);
-        console.log('Bits per Sample:', bitsPerSample);
-
         // Create audio format matching the actual properties
         const audioFormat = AudioStreamFormat.getWaveFormatPCM(
             sampleRate,
@@ -50,8 +46,8 @@ async function recognizeSpeechFromBuffer(buffer) {
         const speechConfig = SpeechConfig.fromSubscription(speechKey, 'eastus');
         speechConfig.speechRecognitionLanguage = 'en-US';
         const recognizer = new SpeechRecognizer(speechConfig, audioConfig);
-        // console.log(audioConfig, speechConfig, recognizer);
 
+        //Launch the recognition
         recognizer.recognizeOnceAsync(
             (result) => {
                 switch (result.reason)
@@ -85,10 +81,7 @@ async function recognizeSpeechFromBuffer(buffer) {
 
 const speechToText = async (req, res, next) => {
 
-    if (!req.file)
-    {
-        return res.status(400).send({ error: 'No file uploaded' });
-    }
+    if (!req.file) return res.status(400).send({ error: 'No file uploaded' });
 
     const audioBuffer = req.file.buffer;
 
@@ -126,6 +119,7 @@ const textToSpeech = async (req, res, next) => {
         const audioResult = await textToSpeechService.textToSpeech(message, speechKey, 'eastus');
         const exampleAudioBuffer = Buffer.from(audioResult);
 
+        //Set the headers
         res.set({
             'Content-Type': 'audio/wav',
             'Content-Disposition': 'inline; filename="speech.wav"',
@@ -240,7 +234,7 @@ const create = async (req, res) => {
 const getActive = async (req, res) =>{
     try{
         //It is guaranteed that there will be 0 or 1 active sessions in REDIS
-        const activeSession = await redisClient.HGETALL(`interviews:${req.userId}:*`);
+        const activeSession = await redisQueryService.getActiveInterview(req.userId);
 
         return res.status(200).json(activeSession);
     }
