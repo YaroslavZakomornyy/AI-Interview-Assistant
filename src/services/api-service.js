@@ -130,11 +130,10 @@ const getActiveSession = async () => {
         }
     });
 
-    console.log(response);
     return response;
 }
 
-const createInterviewSession = async (parameters, jobDescription) => {
+const createInterviewSession = async (parameters, jobDescription, resume) => {
     const load = JSON.stringify(parameters);
 
     try
@@ -161,7 +160,6 @@ const createInterviewSession = async (parameters, jobDescription) => {
 };
 
 const getTranscript = async (interviewId) => {
-
     try
     {
 
@@ -172,17 +170,12 @@ const getTranscript = async (interviewId) => {
             }
         });
 
-
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', 'Transcript.txt');
-        link.click();
-        link.remove();
+        return response.data;
     }
-    catch (err)
+    catch (error)
     {
-        console.error(err);
+        console.error(error);
+        return {error: error};
     }
 }
 
@@ -231,6 +224,40 @@ const evaluateResume = async (resume, jobDescription = '', progressCb) => {
     }
 };
 
+const deleteInterview = async (interviewId) => {
+    try{
+        await api.delete(`/interviews/${interviewId}`, {
+            headers: {
+                'X-User-ID': USER_ID
+            }
+        });
+
+        return null;
+    }
+    catch (error){
+        console.error(error);
+        return {error: error};
+    }
+}
+
+const getInterviewData = async (interviewId) => {
+    try{
+        const interviewData = await api.get(`/interviews/${interviewId}`, {
+            headers: {
+                'X-User-ID': USER_ID
+            }
+        });
+
+        return {response: interviewData};
+    }
+    catch (error){
+        console.error(error);
+        return {error: error};
+    }
+}
+
 export default {
-    sendMessage, getInterviewFeedback, createInterviewSession, evaluateResume, getTranscript, speechToText, textToSpeech, getActiveSession
+    sendMessage, getInterviewFeedback, createInterviewSession, 
+    evaluateResume, getTranscript, speechToText, textToSpeech, 
+    getActiveSession, deleteInterview, getInterviewData
 }

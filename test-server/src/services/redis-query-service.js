@@ -27,10 +27,7 @@ const getActiveInterview = async (userId) => {
             // Extract the interviewId from the key
             const interviewId = interview.split(':')[2];
 
-            // Retrieve the hash data
-            const data = await redisClient.HGETALL(`interviews:${userId}:${interviewId}`);
-
-            return {interviewId: interviewId, data: data };
+            return {interviewId: interviewId};
 
         }
     } while (cursor !== '0'); // Continue until the entire keyspace is scanned

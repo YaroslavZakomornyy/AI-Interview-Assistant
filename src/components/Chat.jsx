@@ -7,6 +7,8 @@ import NavBar from './NavBar';
 import { FaMicrophone } from 'react-icons/fa'; // Install with: npm install react-icons
 import RecordRTC from 'recordrtc';
 import InterviewerProfilePicture from './interviewer-profile-picture/InterviewerProfilePicture';
+import PopupWindow from './popup-window/PopupWindow';
+import transcriptParser from '../utils/transcript-parser';
 
 
 function Chat() {
@@ -24,27 +26,56 @@ function Chat() {
     const recorderRef = useRef(null);
     const streamRef = useRef(null); // Reference to store the MediaStream
     const [shouldEnd, setShouldEnd] = useState(false);
+    const [hasIncompleteSection, setHasIncompleteSection] = useState(false);
 
     const MAX_CHARS = 500;
+
+    useEffect(() => {
+        const getActiveSession = async () => {
+            const response = await apiService.getActiveSession();
+
+            const { interviewId } = response.data;
+
+            if (!interviewId) return;
+
+            setHasIncompleteSection(true);
+            setCurrentInterviewSession(interviewId);
+        }
+
+
+        getActiveSession();
+    }, [])
 
     function handleEnterPress(e) {
         if (e.key === "Enter" && !isInterviewEnded)
         {
+            e.preventDefault();
+            e.stopPropagation();
             fetchChatResponse();
         }
     }
 
+    /**
+     * Starts the interview
+     * @param {string} behavior 
+     * @param {string} quality 
+     * @param {string} interviewStyle 
+     * @param {string} jobDescription 
+     * @param {string} interviewMode 
+     * @param {*} resume 
+     * @returns 
+     */
     const startInterview = async (behavior, quality, interviewStyle, jobDescription, interviewMode, resume) => {
         const parameters = {
             "beh": behavior,
             "quality": quality,
             "int": interviewStyle,
-            "mode": interviewMode
+            "mode": interviewMode.replace("\n", " ").trim()
         }
 
         try
         {
-            const { error, response: interviewId } = await apiService.createInterviewSession(parameters, jobDescription);
+            const { error, response: interviewId } = await apiService.createInterviewSession(parameters, jobDescription, resume);
 
             if (error) return;
 
@@ -65,26 +96,19 @@ function Chat() {
         try
         {
             // Use the existing getTranscript function from api.js
-            await apiService.getTranscript(currentInterviewSession);
+            const file = await apiService.getTranscript(currentInterviewSession);
+
+            const url = window.URL.createObjectURL(new Blob([file]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'Transcript.txt');
+            link.click();
+            link.remove();
+
+
         } catch (error)
         {
             console.error('Error getting transcript:', error);
-        }
-    }
-
-    const endInterview = async () => {
-        if (!currentInterviewSession) return;
-
-        try
-        {
-            // Store the interview ID in local storage for feedback retrieval
-            localStorage.setItem('lastInterviewId', currentInterviewSession);
-
-            // Navigate to feedback page
-            navigate('/feedback');
-        } catch (error)
-        {
-            console.error('Error ending interview:', error);
         }
     }
 
@@ -102,7 +126,7 @@ function Chat() {
             return;
         }
 
-        const message = userInput.slice(0, MAX_CHARS);
+        const message = userInput.slice(0, MAX_CHARS).replace('\n', " ");
         setChatMessages(prevMessages => [...prevMessages, { sender: 'user', text: message }]);
         setUserInput("");
 
@@ -124,18 +148,6 @@ function Chat() {
 
         setChatMessages(prevMessages => [...prevMessages, { sender: 'ai', text: reply }]);
 
-    };
-
-    const downloadAudio = (blob, filename) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url); // Clean up the URL object
     };
 
     const sendRecording = async (file) => {
@@ -252,6 +264,28 @@ function Chat() {
         }
     }
 
+    const handleContinueInterviewSession = async () => {
+        const storedSession = await apiService.getInterviewData(currentInterviewSession);
+        const transcript = await apiService.getTranscript(currentInterviewSession);
+
+        setChatMessages(transcriptParser.parse(transcript));
+        setStarted(true);
+
+    }
+
+    const handleRejectInterviewSession = async () => {
+        const error = await apiService.deleteInterview(currentInterviewSession);
+
+        if (error)
+        {
+            console.error(error);
+            return;
+        }
+
+        setHasIncompleteSection(false);
+        setCurrentInterviewSession(null);
+    }
+
     return (
         <div className="chat-container-with-parameters">
             <NavBar />
@@ -293,7 +327,7 @@ function Chat() {
                                 {interviewMode === "text" && !isInterviewEnded && <button
                                     className="submit-button"
                                     onClick={fetchChatResponse}
-                                    disabled={isInterviewEnded}
+                                    disabled={isInterviewEnded || userInput.length == 0}
                                 >
                                     Submit
                                 </button>}
@@ -324,10 +358,17 @@ function Chat() {
                 </div>
             )}
 
-            <div className="interview-parameters-section">
+            <div className="interview-parameters-section" style={{ flex: started ? 0.6 : 1 }}>
                 <InterviewParameters onStart={startInterview} areMutable={!started} />
             </div>
+            {hasIncompleteSection && !started && <PopupWindow title={"Warning!"}
+                text={"You have an active interview session! You can either continue it, or reject it (you will not get the feedback and the transcript)"}
+                acceptButtonText={"Resume"}
+                onAcceptClick={handleContinueInterviewSession}
+                rejectButtonText={"Abort"}
+                onRejectClick={handleRejectInterviewSession} />}
         </div>
+
     );
 }
 

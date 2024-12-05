@@ -24,7 +24,7 @@ export default function InterviewParameters({ onStart, areMutable }) {
         <div className="settings-container">
             <div className="chatbox-heading">Parameters</div>
 
-            <div className="parameters-selections">
+            {areMutable && <div className="parameters-selections">
                 {/* Behavior selection */}
                 <div>
                     <label htmlFor="behavior-drop-down">Behavior</label>
@@ -73,9 +73,9 @@ export default function InterviewParameters({ onStart, areMutable }) {
                 </div>
 
 
-            </div>
+            </div>}
             {/* Interview mode */}
-            <div>
+            {areMutable && <div>
                 <label htmlFor="interview-mode">Interview mode</label>
                 <div id="interview-mode" className="interview-mode">
                     {(areMutable || interviewMode === "text") && <InterviewModeSelector name={"Text"}
@@ -91,7 +91,7 @@ export default function InterviewParameters({ onStart, areMutable }) {
                         disabled={!areMutable}
                     />}
                 </div>
-            </div>
+            </div>}
 
             {/* Job Description */}
             <label htmlFor="job-description">Job description</label>
@@ -102,10 +102,12 @@ export default function InterviewParameters({ onStart, areMutable }) {
                 onChange={(e) => setJobDescription(e.target.value)}
                 value={jobDescription}
                 disabled={!areMutable}
+                style={{height: areMutable? "100px" : "300px"}}
+                maxLength={3000}
             />
 
             {/* Resume Attachment */}
-            {/* <label htmlFor="resume-upload">Attach your resume (PDF)</label>
+            <label htmlFor="resume-upload">Attach your resume (PDF)</label>
             <input
                 type="file"
                 id="resume-upload"
@@ -113,7 +115,7 @@ export default function InterviewParameters({ onStart, areMutable }) {
                 onChange={handleResumeChange}
                 disabled={!areMutable}
             />
-            {resume && <p>{resume.name}</p>} Display the file name once it's selected */}
+            {resume && <p>{resume.name}</p>} {/*Display the file name once it's selected*/}
 
             {/* Start Button */}
             {areMutable && <button

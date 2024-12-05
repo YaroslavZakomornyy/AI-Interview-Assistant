@@ -32,7 +32,7 @@ const sendInterviewMessage = async (userId, interviewId, message) => {
     try
     {
         //If the history is too big, summarize it
-        if (tokenCount >= 1400)
+        if (tokenCount >= 2000)
         {
             //The first message is the original parameters prompt
             const { response: resp, error } = await summarizeChatHistory(history.slice(1));

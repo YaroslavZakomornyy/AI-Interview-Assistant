@@ -35,6 +35,8 @@
     background-color: #28293D;
     padding: 10px;
     border-radius: 10px;
+    display: flex;
+    flex-direction: column;
 }
 
 .chat-message {
@@ -42,12 +44,14 @@
     padding: 10px;
     border-radius: 5px;
     color: white;
+    max-width: 75%;
 }
 
 .user-message {
     background-color: #6366F1;
     /* Blue background for user messages */
     text-align: right;
+    margin-left: auto;
 }
 
 .ai-message {
@@ -284,18 +288,6 @@
     margin-top: 1rem;
     padding: 1rem;
 }
-
-/* .mic-button {
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-} */
 
 .mic-button {
     margin-top: auto;

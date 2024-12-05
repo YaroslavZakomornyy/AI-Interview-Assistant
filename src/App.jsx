@@ -9,15 +9,6 @@ import apiService from './services/api-service';
 import { useEffect } from 'react';
 
 function App() {
-
-    useEffect(() => {
-        const test = async () => {
-            const res = await apiService.getActiveSession();
-        }
-
-        test();
-    }, []);
-
   return (
     <Router>
       <Routes>

@@ -1,8 +1,10 @@
 import dotenv from "dotenv";
 import wav from "node-wav"
 import fs from "fs";
-import { SpeechConfig, AudioConfig, SpeechRecognizer, ResultReason, 
-    AudioStreamFormat, AudioInputStream, CancellationDetails, CancellationReason } from 'microsoft-cognitiveservices-speech-sdk';
+import {
+    SpeechConfig, AudioConfig, SpeechRecognizer, ResultReason,
+    AudioStreamFormat, AudioInputStream, CancellationDetails, CancellationReason
+} from 'microsoft-cognitiveservices-speech-sdk';
 import { randomUUID } from "crypto";
 import redisClient from "#src/redis-client.js";
 import buildParameterQuery from "#services/interview-query-builder.js";
@@ -11,6 +13,7 @@ import messageSenderService from "#services/message-sender-service.js";
 import textToSpeechService from "#services/text-to-speech-service.js";
 import { getTranscriptPath } from "#utils/path-builder-util.js";
 import redisQueryService from "#services/redis-query-service.js";
+import axios from "axios";
 
 dotenv.config();
 
@@ -176,13 +179,40 @@ const create = async (req, res) => {
 
 
     //Either get the description or set it as nothing
-    const jobDescription = req.body.jobDescription || undefined;
+    let jobDescription = req.body.jobDescription || undefined;
 
     //Create a folder for user's transcripts if non-existent
     if (!fs.existsSync(`${global.appRoot}/data/transcripts/${req.userId}`))
     {
         fs.mkdirSync(`${global.appRoot}/data/transcripts/${req.userId}`);
     }
+
+    // Summarize a long job description and take out the most important stuff. It's cheaper this way than sending the whole thing every message
+    if (jobDescription)
+    {
+        const headers = {
+            "Content-Type": "application/json",
+            "api-key": apiKey
+        };
+
+        // Request payload
+        const payload = {
+            "messages": [
+                {
+                    role: "user",
+                    content: `You are an interviewer. Here is a long job description. Take out the important parts from it/summarize with important info and return it with no formatting at all for yourself: ${jobDescription}`
+                }
+            ],
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "max_tokens": 400
+        };
+
+        //Send a message and wait for the reply
+        jobDescription = (await axios.post(endpoint, payload, { headers })).data.choices[0].message.content;
+        console.log(jobDescription);
+    }
+
 
     //
     const params = buildParameterQuery({
@@ -231,15 +261,17 @@ const create = async (req, res) => {
     return res.status(201).json({ sessionId: sessionId, transcriptId: sessionId });
 }
 
-const getActive = async (req, res) =>{
-    try{
+const getActive = async (req, res) => {
+    try
+    {
         //It is guaranteed that there will be 0 or 1 active sessions in REDIS
         const activeSession = await redisQueryService.getActiveInterview(req.userId);
 
         return res.status(200).json(activeSession);
     }
-    catch(error){
-        return res.status(500).json({error: error});
+    catch (error)
+    {
+        return res.status(500).json({ error: error });
     }
 }
 
@@ -265,12 +297,18 @@ const deleteInterview = async (req, res) => {
     {
         const transcriptId = await redisClient.HGET(`interviews:${req.userId}:${req.interviewId}`, 'transcriptId');
         const transcriptPath = getTranscriptPath(req.userId, transcriptId);
+
+        //Delete the transcrip file
         if (fs.existsSync(transcriptPath))
         {
             fs.unlinkSync(transcriptPath);
         }
 
+        //Delete the interview
         await redisClient.del(`interviews:${req.userId}:${req.interviewId}`);
+
+        //Delete the transcript metadata
+        await redisClient.del(`files:${req.userId}:${transcriptId}`);
         return res.sendStatus(204);
     }
     catch (error)
