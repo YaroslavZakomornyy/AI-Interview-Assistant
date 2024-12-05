@@ -22,7 +22,8 @@ export default function InterviewParameters({ onStart, areMutable }) {
 
     return (
         <div className="settings-container">
-            <div className="chatbox-heading">Parameters</div>
+            {/* <div className="chatbox-heading">Parameters</div> */}
+            <h1 className="parameters-title">Parameters</h1>
 
             {areMutable && <div className="parameters-selections">
                 {/* Behavior selection */}
@@ -75,23 +76,34 @@ export default function InterviewParameters({ onStart, areMutable }) {
 
             </div>}
             {/* Interview mode */}
-            {areMutable && <div>
-                <label htmlFor="interview-mode">Interview mode</label>
-                <div id="interview-mode" className="interview-mode">
-                    {(areMutable || interviewMode === "text") && <InterviewModeSelector name={"Text"}
-                        icon={<FaComments />}
-                        selected={interviewMode === "text"}
-                        onClick={() => setInterviewMode("text")}
-                        disabled={!areMutable}
-                    />}
-                    {(areMutable || interviewMode === "speech") && <InterviewModeSelector name={"Speech"}
-                        icon={<FaMicrophone />}
-                        selected={interviewMode === "speech"}
-                        onClick={() => setInterviewMode("speech")}
-                        disabled={!areMutable}
-                    />}
-                </div>
-            </div>}
+            <div className="interview-mode-container">
+                {(areMutable || interviewMode === "text") && (
+                    <div
+                    className={`interview-mode-button ${
+                        interviewMode === "text" ? "selected" : ""
+                    }`}
+                    onClick={() => setInterviewMode("text")}
+                    >
+                    <FaComments className="icon" />
+                    <span>Text</span>
+                    </div>
+                )}
+                {(areMutable || interviewMode === "speech") && (
+                    <div
+                    className={`interview-mode-button ${
+                        interviewMode === "speech" ? "selected" : ""
+                    }`}
+                    onClick={() => setInterviewMode("speech")}
+                    >
+                    <FaMicrophone className="icon" />
+                    <span>Speech</span>
+                    </div>
+                )}
+            </div>
+
+            <div>
+
+            </div>
 
             {/* Job Description */}
             <label htmlFor="job-description">Job description</label>

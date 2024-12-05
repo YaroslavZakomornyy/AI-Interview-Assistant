@@ -68,3 +68,77 @@ button {
 .settings-container button.start-button:hover {
   background-color: #444;
 }
+
+.interview-mode {
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Space between the icons */
+}
+
+.interview-mode-selector {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px; /* Space between icon and text */
+  cursor: pointer;
+  color: #fff;
+  font-size: 0.9rem; /* Slightly smaller text size */
+}
+
+.interview-mode-selector .icon {
+  font-size: 1.5rem; /* Smaller icon size */
+  transition: transform 0.3s, color 0.3s;
+}
+
+.interview-mode-selector:hover .icon {
+  transform: scale(1.1); /* Slight zoom effect on hover */
+  color: #4a90e2; /* Change color on hover */
+}
+
+.interview-mode-selector.selected .icon {
+  color: #6c63ff; /* Different color for selected mode */
+}
+
+.interview-mode-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Space between buttons */
+  margin-top: 20px; /* Space from the dropdowns above */
+}
+
+.interview-mode-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* Space between icon and text */
+  border: 2px solid #6c63ff; /* Purple border */
+  border-radius: 8px; /* Rounded corners */
+  padding: 10px 20px; /* Padding inside the button */
+  background-color: #1a1b3f; /* Button background color */
+  color: white; /* Text color */
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.interview-mode-button:hover {
+  background-color: #4a90e2; /* Light blue on hover */
+  transform: scale(1.05); /* Slight zoom effect */
+}
+
+.interview-mode-button.selected {
+  background-color: #6c63ff; /* Purple background for selected mode */
+}
+
+.interview-mode-button .icon {
+  font-size: 1.2rem; /* Icon size */
+}
+
+.parameters-title {
+  font-size: 2rem; /* Larger font size for emphasis */
+  font-weight: bold; /* Make the text bold */
+  color: #6c63ff; /* Purple color */
+  text-align: center; /* Center the title */
+  margin-bottom: 20px; /* Add space below the title */
+  /* text-transform: uppercase; Optional: Makes the text all uppercase */
+  /* letter-spacing: 2px; Optional: Adds spacing between letters */
+}
