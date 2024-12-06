@@ -20,6 +20,9 @@ const FeedbackPage = () => {
             }
             try {
                 const response = await apiService.getInterviewFeedback(lastInterviewId);
+
+                console.log(response);
+
                 const feedbackContent = response.message;
 
                 let parsedFeedback;

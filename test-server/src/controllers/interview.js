@@ -148,10 +148,10 @@ const sendMessage = async (req, res, next) => {
     }
 
     const { response, error } = await messageSenderService.sendInterviewMessage(req.userId, req.interviewId, userMessage);
-
+    console.log(response.data.usage);
     if (error)
     {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({ error: "Error with OpenAI" });
     }
     else
@@ -210,16 +210,59 @@ const create = async (req, res) => {
 
         //Send a message and wait for the reply
         jobDescription = (await axios.post(endpoint, payload, { headers })).data.choices[0].message.content;
-        console.log(jobDescription);
+        // console.log(jobDescription);
     }
 
+    let resumeId = req.body.resumeId || undefined;
+    let resumeContent;
+    if (resumeId)
+    {
+        //Check if the file exists
+        if (!redisClient.exists(`files:${req.userId}:${resumeId}`))
+        {
+            return res.status(404).json({ error: 'File not found' });
+        }
+
+        const filePath = await redisClient.HGET(`files:${req.userId}:${resumeId}`, "path");
+        if (!filePath)
+        {
+            console.log("file for interview is not found");
+            return res.sendStatus(500);
+        }
+
+        const contents = await filesService.parsePdf(filePath);
+
+        const messages =
+            [
+                {
+                    "role": "user",
+                    "content": `You are an interviewer, summarize the important information from the resume for yourself (no formatting required at all): ${contents}`
+                },
+            ]
+
+        const headers = {
+            "Content-Type": "application/json",
+            "api-key": apiKey
+        };
+
+        // Request payload
+        const payload = {
+            "messages": messages,
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "max_tokens": 400
+        };
+
+        resumeContent = (await axios.post(endpoint, payload, { headers })).data.choices[0].message.content;
+    }
 
     //
     const params = buildParameterQuery({
         behavior: parameters.beh,
         workplace_quality: parameters.quality,
         interview_style: parameters.int,
-        jobDescription: jobDescription
+        jobDescription: jobDescription,
+        resumeContent: resumeContent
     });
 
     const message =
@@ -238,7 +281,7 @@ const create = async (req, res) => {
         startedAt: new Date().toISOString(),
         status: "Active",
         transcriptId: sessionId,
-        resumeId: "",
+        resumeId: resumeId || "",
         mode: parameters.mode,
         behavior: parameters.beh,
         workplace_quality: parameters.quality,

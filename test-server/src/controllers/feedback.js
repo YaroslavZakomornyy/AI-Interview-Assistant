@@ -21,20 +21,20 @@ const interviewFeedback = async (req, res) => {
     // if (interviewStatus === "Running") return res.status(409).json({error: "The interview is still running!"});
     
     // const transcript = await filesService.readAll(await redisClient.HGET(`files:${req.userId}:${transcriptId}`, "path"));
-    
+    // console.log(history);
     const messages = [
         {
             "role": "system",
             "content": "Analyze the performance of the interviewee in the provided interview history. \
              (Do not evaluate rows that start with the 'interviewer' role.) \
-            Provide comprehensive, but concise feedback (if possible, i.e. 2 sentence interviews are impossible to evaluate). \
+            Provide comprehensive, but more or less concise feedback (if possible, i.e. 2 sentence interviews are impossible to evaluate). \
                        Return a JSON with: \
                        { 'overallScore': number (0-100), \
                         'positiveAspects': string, \
                         'negativeAspects': string, \
-                       'improvementTips': string[] }. \
+                        'improvementTips': string[] }. \
             Here are partial evaluation that were based on the interview before the history summarization. You don't have to incorporate them, but \
-            if you do, they should influence the final result. " + JSON.stringify(subEvaluations)
+            if you do, they should influence the final result. Do not include ```json part " + JSON.stringify(subEvaluations)
         },
         {
             "role": "user",
@@ -54,10 +54,10 @@ const interviewFeedback = async (req, res) => {
         "top_p": 0.95,
         "max_tokens": 400
     };
-
+    // console.log(messages);
     try {
         const response = await axios.post(endpoint, payload, { headers });
-        
+        console.log(response.data.choices[0].message.content);
         return res.status(200).json({ 
             message: response.data.choices[0].message.content
         });

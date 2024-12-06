@@ -307,7 +307,7 @@
 }
 
 /* Disable clickable icon */
-.mic-button>*{
+.mic-button>* {
     user-select: none;
     pointer-events: none;
 }

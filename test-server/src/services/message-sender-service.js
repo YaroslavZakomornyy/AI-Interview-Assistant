@@ -42,7 +42,7 @@ const sendInterviewMessage = async (userId, interviewId, message) => {
                 throw new Error(error);
             }
 
-            console.log(resp);
+            // console.log(resp);
 
             const { summary, newTokenCount, evaluation, questions } = resp;
 
@@ -83,7 +83,7 @@ const sendInterviewMessage = async (userId, interviewId, message) => {
         //Write the AI message to the log
         fs.appendFileSync(`${global.appRoot}/data/transcripts/${userId}/${interviewId}.txt`, `[${new Date().toISOString()}]interviewer: ${response.data.choices[0].message.content}\n`);
 
-        console.log(response.data);
+        // console.log(response.data);
         //Append the reply to the message history
         appendNewMessage(history, response.data.choices[0].message.content, 'assistant');
 

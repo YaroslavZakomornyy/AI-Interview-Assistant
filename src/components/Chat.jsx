@@ -62,7 +62,7 @@ function Chat() {
      * @param {string} interviewStyle 
      * @param {string} jobDescription 
      * @param {string} interviewMode 
-     * @param {*} resume 
+     * @param {string} resume 
      * @returns 
      */
     const startInterview = async (behavior, quality, interviewStyle, jobDescription, interviewMode, resume) => {
@@ -75,7 +75,15 @@ function Chat() {
 
         try
         {
-            const { error, response: interviewId } = await apiService.createInterviewSession(parameters, jobDescription, resume);
+            let resumeId;
+
+            if (resume)
+            {
+                resumeId = await apiService.uploadFile(resume);
+            }
+
+
+            const { error, response: interviewId } = await apiService.createInterviewSession(parameters, jobDescription, resumeId);
 
             if (error) return;
 
@@ -95,7 +103,6 @@ function Chat() {
 
         try
         {
-            // Use the existing getTranscript function from api.js
             const file = await apiService.getTranscript(currentInterviewSession);
 
             const url = window.URL.createObjectURL(new Blob([file]));
@@ -141,7 +148,6 @@ function Chat() {
         // Check if the AI wants to end the interview
         if (reply.includes('/stop'))
         {
-            // console.log(reply);
             setIsInterviewEnded(true);
             reply = reply.replace('/stop', '');
         }
@@ -165,7 +171,7 @@ function Chat() {
 
         //Send the converted message 
         ({ response, error } = await apiService.sendMessage(response.data.message, currentInterviewSession));
-        console.log(response);
+
         if (error)
         {
             setIsWaiting(false);

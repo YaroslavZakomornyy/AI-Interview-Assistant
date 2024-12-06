@@ -77,6 +77,21 @@ const textToSpeech = async (message) => {
 
 }
 
+const uploadFile = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+
+    let response = await api.post("/files", formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            'X-User-ID': USER_ID
+        }
+    });
+
+    console.log(response);
+    return response.data.fileId;
+}
+
 const speechToText = async (recording) => {
     if (!recording) return;
     const formData = new FormData();
@@ -119,6 +134,21 @@ const getInterviewFeedback = async (interviewId) => {
             'X-User-ID': USER_ID
         }
     });
+
+    await deleteInterview(interviewId);
+
+    return response.data;
+}
+
+const updateInterview = async(interviewId, state) =>{
+    const response = await api.put(`/interviews/${interviewId}`, {
+        state: state
+    }, {
+        headers: {
+            'X-User-ID': USER_ID
+        }
+    });
+
     return response;
 }
 
@@ -133,14 +163,15 @@ const getActiveSession = async () => {
     return response;
 }
 
-const createInterviewSession = async (parameters, jobDescription, resume) => {
+const createInterviewSession = async (parameters, jobDescription, resumeId) => {
     const load = JSON.stringify(parameters);
 
     try
     {
         const response = await api.post(`/interviews`, {
             parameters: load,
-            jobDescription: jobDescription
+            jobDescription: jobDescription,
+            resumeId: resumeId
         }, {
             headers: {
                 'Content-Type': 'application/json',
@@ -180,34 +211,24 @@ const getTranscript = async (interviewId) => {
 }
 
 const evaluateResume = async (resume, jobDescription = '', progressCb) => {
-    const formData = new FormData();
-    formData.append('file', resume, resume.name);
+    
 
-    // Optionally add job description if provided
-    if (jobDescription)
-    {
-        formData.append('jobDescription', jobDescription);
-    }
+    // Optionally add job description if provided TODO: FIX THIS, this does not affect the final result
+    // if (jobDescription)
+    // {
+    //     formData.append('jobDescription', jobDescription);
+    // }
 
     try
     {
         if (progressCb && typeof progressCb === "function") progressCb("Uploading");
 
-        // Upload the resume
-        let response = await api.post("/files", formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                'X-User-ID': USER_ID
-            }
-        });
-
-        console.log(response);
-        const fileId = response.data.fileId;
+        const fileId = await uploadFile(resume);
 
         if (progressCb && typeof progressCb === "function") progressCb("Evaluating");
 
         // Get feedback for the uploaded resume
-        response = await api.get(`/files/${fileId}/feedback`, {
+        const response = await api.get(`/files/${fileId}/feedback`, {
             headers: {
                 'X-User-ID': USER_ID
             }
@@ -259,5 +280,5 @@ const getInterviewData = async (interviewId) => {
 export default {
     sendMessage, getInterviewFeedback, createInterviewSession, 
     evaluateResume, getTranscript, speechToText, textToSpeech, 
-    getActiveSession, deleteInterview, getInterviewData
+    getActiveSession, deleteInterview, getInterviewData, uploadFile
 }
