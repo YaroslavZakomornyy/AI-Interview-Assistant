@@ -51,6 +51,7 @@ axios.post('localhost:3000/api/v1/files', formData, {
 |413|`Payload Too Large`|The provided content is too large.|
 |500|`Server Error`|An error occured on the server.|
 
+<!--> ------------------------------------------------------------------ -->
 
 ## Get files metadata
 Returns metadata of all files owned by user.
@@ -108,7 +109,7 @@ axios.get('localhost:3000/api/v1/files/meta?type=resume', {
 |401|`Unauthorized`|Missing or invalid authentication token.|
 |500|`Server Error`|An error occured on the server.|
 
-
+<!--> ------------------------------------------------------------------ -->
 
 ## Download file
 Returns the requested file.
@@ -145,4 +146,55 @@ axios.get('localhost:3000/api/v1/files/5fe303ba-317d-4819-b57e-1425e2eb5532', {
 |200|`OK`|Data received successfully.|
 |401|`Unauthorized`|Missing or invalid authentication token.|
 |404|`Not Found`|File not found.|
+|500|`Server Error`|An error occured on the server.|
+
+<!--> ------------------------------------------------------------------ -->
+
+## Get file metadata
+Returns metadata of a particular file.
+
+- **URL:** `/api/v1/files/{fileId}/meta`
+- **Method:** `GET`
+- **Headers:**
+  - `x-user-id`: `<userId>` required
+
+### Request Parameters
+|Parameter|Type|Description|Requirement|
+|---|---|---|---|
+
+
+### Example Request
+
+```
+axios.get('localhost:3000/api/v1/files/5fe303ba-317d-4819-b57e-1425e2eb5532/meta', {
+  headers: {
+    'x-user-id': '<userId>'
+  }
+})
+```
+
+### Response Parameters
+|Parameter|Type|Description|
+|---|---|---|
+|`fileName`|`string`| Name of the file.|
+|`type`|`string`| Type of the file.|
+|`fileId`|`string`| ID of the file.|
+|`uploadedAt`|`string`| Timestamp of the time the file was uploaded.|
+
+### Example Response
+```
+{
+  "fileName": "file.pdf",
+  "type": "resume",
+  "fileId": "5fe303ba-317d-4819-b57e-1425e2eb5532",
+  "uploadedAt": "2024-11-14T19:45:35.726Z"
+}
+
+```
+
+### Response status codes
+|Status Code | Status | Description|
+|---|---|---|
+|200|`OK`|Data received successfully.|
+|401|`Unauthorized`|Missing or invalid authentication token.|
 |500|`Server Error`|An error occured on the server.|
