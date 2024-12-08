@@ -51,7 +51,7 @@ axios.post('localhost:3000/api/v1/files', formData, {
 |413|`Payload Too Large`|The provided content is too large.|
 |500|`Server Error`|An error occured on the server.|
 
-<!--> ------------------------------------------------------------------ -->
+<!-- ------------------------------------------------------------------ -->
 
 ## Get files metadata
 Returns metadata of all files owned by user.
@@ -109,7 +109,7 @@ axios.get('localhost:3000/api/v1/files/meta?type=resume', {
 |401|`Unauthorized`|Missing or invalid authentication token.|
 |500|`Server Error`|An error occured on the server.|
 
-<!--> ------------------------------------------------------------------ -->
+<!-- ------------------------------------------------------------------ -->
 
 ## Download file
 Returns the requested file.
@@ -148,7 +148,7 @@ axios.get('localhost:3000/api/v1/files/5fe303ba-317d-4819-b57e-1425e2eb5532', {
 |404|`Not Found`|File not found.|
 |500|`Server Error`|An error occured on the server.|
 
-<!--> ------------------------------------------------------------------ -->
+<!-- ------------------------------------------------------------------ -->
 
 ## Get file metadata
 Returns metadata of a particular file.
