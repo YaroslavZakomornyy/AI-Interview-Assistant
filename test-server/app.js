@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import interviewRoutes from '#routes/interview-routes.js';
 import fileManagementRoutes from '#routes/files-routes.js';
+import miscRoutes from '#routes/misc-routes.js';
 import { dirname} from 'path';
 import { fileURLToPath } from 'url';
 
@@ -34,6 +35,7 @@ app.use(function(req, res, next){
 
 router.use(interviewRoutes);
 router.use(fileManagementRoutes);
+router.use(miscRoutes);
 
 app.use("/api", router);
 

@@ -17,7 +17,7 @@ function HomePage() {
       <p></p>
       <Link to="/resume" className="button">Resume Analysis</Link>
       <p></p>
-      <a href="#" className="button" onClick={handlePastFeedbackClick}>Past Feedback</a>
+      {/* <a href="#" className="button" onClick={handlePastFeedbackClick}>Past Feedback</a> */}
     </div>
   );
 }

@@ -119,7 +119,7 @@ export default function InterviewParameters({ onStart, areMutable }) {
             />
 
             {/* Resume Attachment */}
-            <label htmlFor="resume-upload">Attach your resume (PDF)</label>
+            <label htmlFor="resume-upload">Attach your resume</label>
             <input
                 type="file"
                 id="resume-upload"

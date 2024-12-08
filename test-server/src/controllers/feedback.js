@@ -26,22 +26,25 @@ const interviewFeedback = async (req, res) => {
         {
             "role": "system",
             "content": "Analyze the performance of the interviewee in the provided interview history. \
-             (Do not evaluate rows that start with the 'interviewer' role.) \
-            Provide comprehensive, but more or less concise feedback (if possible, i.e. 2 sentence interviews are impossible to evaluate). \
+             (Do not evaluate rows that start with the 'interviewer' role.) You are provided with the whole history. There was nothing before the first message \
+            Provide comprehensive, but more or less concise feedback (if the interview is a nonsense, penalize the score harshly). \
                        Return a JSON with: \
                        { 'overallScore': number (0-100), \
                         'positiveAspects': string, \
                         'negativeAspects': string, \
                         'improvementTips': string[] }. \
+Score should be affected more by the skills demonstration of the interviewee, less by their behavior\
             Here are partial evaluation that were based on the interview before the history summarization. You don't have to incorporate them, but \
             if you do, they should influence the final result. Do not include ```json part " + JSON.stringify(subEvaluations)
         },
         {
             "role": "user",
-            "content": JSON.stringify(history),
+            "content": JSON.stringify(history.slice(1)),
         },
     ];
     
+    console.log(history.slice(1));
+
     const headers = {
         "Content-Type": "application/json",
         "api-key": apiKey
