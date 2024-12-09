@@ -20,7 +20,7 @@ CSE Project at USF
    npm install node
    ```
 
-7. **Azure OpenAI API Key and Endpoint Setup**:
+7. **Azure OpenAI API Key and Endpoint Setup** (skip this step if the .env file provided):
    - Log into [Azure](https://portal.azure.com/#home).
    - Click on the **Azure OpenAI** resource (check the "type" column) in the home tab.
    - In the **Overview** tab, click on "Go to Azure OpenAI Studio".
@@ -29,15 +29,20 @@ CSE Project at USF
    - Select an existing deployment or create a new one (e.g., `gpt-4o-mini` is the most affordable option).
    - You will find the **Target URI** and **API Key** on the right.
 
-8. **Create a `.env` file** in the `/test-server` folder and insert the following lines:
+9. **Create a `.env` file** in the `/test-server` folder and insert the following lines (skip this step if the .env file provided):
    ```bash
    API_KEY="YOUR KEY"
    ENDPOINT="YOUR ENDPOINT"
    ```
+10. **Install docker image**:
+    In the root folder run
+    ```bash
+    docker load -i ai-interviewer.tar
+    ``` 
 
 ## How to Run
 
-1. You will need **two terminals**.
+1. You will need **three terminals**.
 
 2. **First terminal**: 
    - Navigate to the project's root folder and run:
@@ -50,6 +55,11 @@ CSE Project at USF
    ```bash
    node app.js
    ```
+4. **Third terminal**:
+   ```bash
+   docker run -d -p 6379:6379 redis/redis-stack-server:latest
+   ```
+   - use ```docker ps``` to check that the container is running
 
 ---
 
