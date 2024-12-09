@@ -12,7 +12,6 @@ async function textToSpeech(text, subscriptionKey, region) {
     return new Promise((resolve, reject) => {
         // Initialize Speech Config
         const speechConfig = SpeechConfig.fromSubscription(subscriptionKey, region);
-        // speechConfig.speechSynthesisVoiceName = 'en-US-JennyNeural'; // Set desired voice
         const audioConfig = AudioConfig.fromDefaultSpeakerOutput();
 
         const synthesizer = new SpeechSynthesizer(speechConfig, audioConfig);

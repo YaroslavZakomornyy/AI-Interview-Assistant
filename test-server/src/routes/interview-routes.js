@@ -8,8 +8,8 @@ const router = express.Router();
 
 router.use(json());
 
-router.post('/v1/interviews', interviewController.create);  //Creates an interview session
-router.get('/v1/interviews/active', interviewController.getActive);  //Retrieves user's active interview session
+router.post('/', interviewController.create);  //Creates an interview session
+router.get('/active', interviewController.getActive);  //Retrieves user's active interview session
 
 //Checks if the interviewId exists
 router.param('interviewId', async (req, res, next, interviewId) => {
@@ -18,17 +18,17 @@ router.param('interviewId', async (req, res, next, interviewId) => {
     
     if (!(await redisClient.exists(`interviews:${req.userId}:${interviewId}`))) return res.status(404).json({ error: "Interview not found" });
     req.interviewId = interviewId;
+    console.log(req.interviewId);
     next();
 });
 
-//These routes are guaranteed to receive valid userId and InterviewId
-router.get('/v1/interviews/:interviewId', interviewController.getData); //Returns details of the interview
-router.put('/v1/interviews/:interviewId', interviewController.updateInterview); //Update the state of the interview
-router.delete('/v1/interviews/:interviewId', interviewController.deleteInterview); //Delete an interview
+//These routes are guaranteed to receive a valid userId and InterviewId
+router.get('/:interviewId', interviewController.getData); //Returns details of the interview
+router.put('/:interviewId', interviewController.updateInterview); //Update the state of the interview
+router.delete('/:interviewId', interviewController.deleteInterview); //Delete an interview
 
-router.post('/v1/interviews/:interviewId/message', interviewController.sendMessage); //Send a message
-router.get('/v1/interviews/:interviewId/feedback', feedbackController.interviewFeedback); //Get a feedback on the interview
-
+router.post('/:interviewId/message', interviewController.sendMessage); //Send a message
+router.get('/:interviewId/feedback', feedbackController.interviewFeedback); //Get a feedback on the interview
 
 
 export default router;

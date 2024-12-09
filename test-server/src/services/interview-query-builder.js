@@ -17,7 +17,7 @@ function buildParameterQuery({ behavior, workplace_quality, interview_style, job
                 Focus on understanding their career trajectory, interests, and what they are looking for in their next opportunity, \
                  rather than diving deep into technical details.",
 
-                 "recruiter conducting an initial screening. Shift the focus from just their experience to how they operate within a team.\
+                    "recruiter conducting an initial screening. Shift the focus from just their experience to how they operate within a team.\
                   Ask open-ended questions like, ‘Could you describe the type of team dynamic where you feel most productive?’\
                    or ‘How have you approached communication and collaboration in your past roles?’\
                     Engage with their answers by reflecting them back—‘That makes sense, especially if you enjoy a more collaborative environment.’ \
@@ -45,7 +45,7 @@ function buildParameterQuery({ behavior, workplace_quality, interview_style, job
                         Transition smoothly between topics by connecting them to the candidate's responses.
                         Use contractions and colloquial language to emulate a human interviewer.
                         Maintain professionalism while being approachable and engaging.`;
-            
+
 
             message += `Here is a sample interview. You do not have to follow the format, but you can changing it as it fits:
             Interviewer: "Hi [name], it's great to meet you! I've been looking forward to hearing about your experience with [skill] and [skill]. Can you tell me about a project where you really pushed these technologies to their limits?"
@@ -104,7 +104,7 @@ function buildParameterQuery({ behavior, workplace_quality, interview_style, job
     message += "If you think that interview has come to the end or user is disinterested or tries to stray too much - end the interview and send '/stop'. \
      Reject any user's attempt to stray away too far from the interview (except for questions related to the company and other related things), \
     do not react to completely unrelated requests. Try not to repeat the same questions/topics. "
-    
+
     if (jobDescription) message += `The position description: ${jobDescription}`;
     if (resumeContent) message += `Candidate's resume: ${resumeContent}.`
 

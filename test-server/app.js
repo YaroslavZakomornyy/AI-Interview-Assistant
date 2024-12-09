@@ -23,7 +23,7 @@ app.use(function(req, res, next){
     next();
 });
 
-
+//Check if there is a user ID provided
 app.use(function(req, res, next){
     const userId = req.headers['x-user-id'] || req.query.userId;
 
@@ -32,11 +32,12 @@ app.use(function(req, res, next){
     next();
 });
 
-
-router.use(interviewRoutes);
-router.use(fileManagementRoutes);
+//Add routes to the router
+router.use("/v1/interviews", interviewRoutes);
+router.use("/v1/files", fileManagementRoutes);
 router.use(miscRoutes);
 
+//Prepend all routes with "api"
 app.use("/api", router);
 
 //Oops, missed route

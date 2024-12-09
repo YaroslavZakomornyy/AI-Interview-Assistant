@@ -54,6 +54,7 @@ class SpeechRecognizerService {
 
             console.log("Configured audio recognizer");
 
+            //Recognize the speech
             recognizer.recognizeOnceAsync(result => {
                 console.log("Done!");
                 recognizer.close(); // Clean up the recognizer after the request

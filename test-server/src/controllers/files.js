@@ -1,42 +1,43 @@
 import path from "path";
-import redisClient from "../redis-client.js";
-import filesService from "../services/files-service.js";
+import filesService from "#services/files-service.js";
 import fs from "fs";
-import multerService from "../services/multer-service.js";
+import multerService from "#services/multer-service.js";
+import redisQueryService from "#services/redis-query-service.js";
 
 
-const requestMetaAll = async (req, res) => {
-    const fileType = req.query.type;
-    const pattern = `files:${req.userId}:*`
-    console.log(fileType);
-    let cursor = 0;
-    let result = [];
+// const requestMetaAll = async (req, res) => {
+//     const fileType = req.query.type;
+//     const pattern = `files:${req.userId}:*`
 
-    do
-    {
-        const scanRes = await redisClient.SCAN(cursor, { MATCH: pattern, COUNT: 10 });
-        
-        if (scanRes.keys.length == 0) break;
-        cursor = scanRes.cursor;
-        const keys = scanRes.keys;
+//     let cursor = 0;
+//     let result = [];
 
-        for (const key of keys)
-        {
-            const obj = await filesService.getMetaDataWithKey(key);
-            if (fileType !== undefined && fileType !== obj.type) continue;
-            result.push(obj);
-        }
-    } while (cursor !== 0);
+//     //Get all files that are owned by the user
+//     do
+//     {
+//         const scanRes = await redisClient.SCAN(cursor, { MATCH: pattern, COUNT: 10 });
 
-    return res.status(200).json(result);
-}
+//         if (scanRes.keys.length == 0) break;
+//         cursor = scanRes.cursor;
+//         const keys = scanRes.keys;
+
+//         for (const key of keys)
+//         {
+//             const obj = await filesService.getMetaDataWithKey(key);
+//             if (fileType !== undefined && fileType !== obj.type) continue;
+//             result.push(obj);
+//         }
+//     } while (cursor !== 0);
+
+//     return res.status(200).json(result);
+// }
 
 const requestMeta = async (req, res) => {
 
     const fileId = req.params['fileId'];
 
     //Check if the file exists
-    if (!(await redisClient.exists(`files:${req.userId}:${fileId}`))) return res.status(404).json({ message: "File not found" });
+    if (!(await redisQueryService.fileExists(req.userId, fileId))) return res.status(404).json({ message: "File not found" });
 
 
     return res.status(200).json(await filesService.getMetaData(req.userId, fileId));
@@ -45,6 +46,7 @@ const requestMeta = async (req, res) => {
 
 const upload = async (req, res) => {
 
+    //Handle file filtering and upload
     await multerService.uploadHandler(req, res, async (err) => {
         if (err)
         {
@@ -75,16 +77,20 @@ const upload = async (req, res) => {
 }
 
 const download = async (req, res) => {
+    const userId = req.userId;
     const fileId = req.params['fileId'];
 
-    if (!(await redisClient.exists(`files:${req.userId}:${fileId}`))) return res.status(404).json({ error: "File not found" });
+    if (!(await redisQueryService.fileExists(userId, fileId))) return res.status(404).json({ error: "File not found" });
 
-    const filePath = await redisClient.hGet(`files:${req.userId}:${fileId}`, "path");
-
-    try {
+    try
+    {
+        const { error, response: filePath } = await redisQueryService.getFileFields(userId, fileId, ['path']);
+        if (error) throw new Error(error);
         return res.status(200).sendFile(filePath);
-    } catch (sendErr) {
-        console.error("Error sending file:", sendErr);
+    }
+    catch (error)
+    {
+        console.error("Error sending file:", error);
         return res.status(500).json({ error: "Failed to send file" });
     }
 }
@@ -92,18 +98,35 @@ const download = async (req, res) => {
 const remove = async (req, res) => {
 
     const fileId = req.params['fileId'];
+    const userId = req.userId;
 
-    if (!await redisClient.exists(`files:${req.userId}:${fileId}`)) return res.status(404).json({ message: "File not found" });
+    if (!(await redisQueryService.fileExists(userId, fileId))) return res.status(404).json({ message: "File not found" });
 
-    fs.unlink(await redisClient.HGET(`files:${req.userId}:${fileId}`, "path"), async (err) => {
-        if (err) {
+    //Get the file path and delete the file
+
+    const { error, response: path } = await redisQueryService.getFileFields(userId, fileId, ['path']);
+
+    if (error)
+    {
+        console.error("Error deleting the file:", error);
+        return res.sendStatus(500);
+    }
+
+    fs.unlink(error, async (err) => {
+        if (err)
+        {
             console.error("Error deleting the file:", err);
             return res.sendStatus(500);
-        } else {
-            try {
-                await redisClient.del(`files:${req.userId}:${fileId}`);
+        } 
+        else
+        {
+            try
+            {
+                const { error } = await redisQueryService.deleteFile(userId, fileId);
+                if (error) throw new Error(error);
                 return res.sendStatus(200);
-            } catch (redisErr) {
+            } catch (redisErr)
+            {
                 console.error("Error deleting file metadata in Redis:", redisErr);
                 return res.sendStatus(500);
             }
@@ -112,5 +135,5 @@ const remove = async (req, res) => {
 }
 
 export default {
-    upload, remove, requestMeta, requestMetaAll, download
+    upload, remove, requestMeta, download
 }

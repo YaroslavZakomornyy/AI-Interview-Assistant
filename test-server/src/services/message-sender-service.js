@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import fs from "fs";
 import axios from "axios";
 import { error } from "console";
+import redisQueryService from "./redis-query-service.js";
+import { getTranscriptPath } from "#src/utils/path-builder-util.js";
 
 dotenv.config();
 const apiKey = process.env.API_KEY;
@@ -11,6 +13,45 @@ const endpoint = process.env.CHAT_COMPLETION_ENDPOINT;
 if (!apiKey || !endpoint)
 {
     throw new Error("No API_KEY or CHAT_COMPLETION_ENDPOINT provided");
+}
+
+/**
+ * Sends one message to the AI
+ * @param {string} message Message to send to
+ * @param {string} role Can be either of "system", "assistant" or "user"
+ * @param {number} token_limit The output token limit
+ * @returns Response from the AI or error
+ */
+const sendOneMessage = async (message, role, token_limit = 300) => {
+    if (role !== "system" && role !== "assistant" && role !== "user"){
+        throw new Error("Role can be either 'system', 'assistant' or 'user'");
+    }
+
+    try{
+        const headers = {
+            "Content-Type": "application/json",
+            "api-key": apiKey
+        };
+
+        // Request payload
+        const payload = {
+            "messages": [
+                {
+                    role: role,
+                    content: message
+                }
+            ],
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "max_tokens": token_limit
+        };
+
+        
+        return {response: await axios.post(endpoint, payload, { headers })};
+    }
+    catch (error){
+        return {error: error};
+    }
 }
 
 const appendNewMessage = (messageHistory, newMessage, role) => {
@@ -24,11 +65,14 @@ const appendNewMessage = (messageHistory, newMessage, role) => {
 
 
 const sendInterviewMessage = async (userId, interviewId, message) => {
-    //Retrieving current interview history
-    let [currentSessionData, tokenCount, subEvaluations] = await redisClient.HMGET(`interviews:${userId}:${interviewId}`,
-        ['history', 'historyTokenCount', 'subEvaluations']);
+    //Retrieving current interview history    
+    let {error, response: [currentSessionData, tokenCount, subEvaluations]} = await redisQueryService.getInterviewFields(userId, interviewId, ['history', 'historyTokenCount', 'subEvaluations']);
+
+    if (error){
+        return { error: error };
+    }
+
     let history = JSON.parse(currentSessionData);
-    // console.log(tokenCount);
     try
     {
         //If the history is too big, summarize it
@@ -61,7 +105,7 @@ const sendInterviewMessage = async (userId, interviewId, message) => {
         appendNewMessage(history, message, 'user');
 
         //Write the user message to the log. Doing this separately, since the history will be changed to fit the token count
-        fs.appendFileSync(`${global.appRoot}/data/transcripts/${userId}/${interviewId}.txt`, `[${new Date().toISOString()}]user: ${message}\n`);
+        fs.appendFileSync(getTranscriptPath(userId, interviewId), `[${new Date().toISOString()}]user: ${message}\n`);
 
 
         const headers = {
@@ -81,9 +125,8 @@ const sendInterviewMessage = async (userId, interviewId, message) => {
         const response = await axios.post(endpoint, payload, { headers });
 
         //Write the AI message to the log
-        fs.appendFileSync(`${global.appRoot}/data/transcripts/${userId}/${interviewId}.txt`, `[${new Date().toISOString()}]interviewer: ${response.data.choices[0].message.content}\n`);
+        fs.appendFileSync(getTranscriptPath(userId, interviewId), `[${new Date().toISOString()}]interviewer: ${response.data.choices[0].message.content}\n`);
 
-        // console.log(response.data);
         //Append the reply to the message history
         appendNewMessage(history, response.data.choices[0].message.content, 'assistant');
 
@@ -94,10 +137,10 @@ const sendInterviewMessage = async (userId, interviewId, message) => {
             subEvaluations: subEvaluations
         });
 
-        return { response: response, error: null };
+        return { response: response};
     } catch (error)
     {
-        return { response: null, error: error };
+        return { error: error };
     }
 }
 
@@ -151,5 +194,5 @@ const summarizeChatHistory = async (chatHistory) => {
 
 
 export default {
-    sendInterviewMessage
+    sendInterviewMessage, sendOneMessage
 }

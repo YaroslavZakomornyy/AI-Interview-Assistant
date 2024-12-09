@@ -2,6 +2,7 @@ import redisClient from "../redis-client.js";
 import path from "path";
 import pdfParse from "pdf-parse";
 import fs from "fs";
+import redisQueryService from "./redis-query-service.js";
 
 //TODO: Add persistent file option. Not all files will be needed for a fast retrieval
 /**
@@ -17,7 +18,7 @@ const cacheFile = async (userId, id, filePath, name, type) => {
         throw new Error("File type must be 'resume' or 'transcript'");
     };
     try{
-        await redisClient.hSet(`files:${userId}:${id}`, {
+        await redisClient.HSET(`files:${userId}:${id}`, {
             path: path.normalize(filePath),
             fileName: name,
             fileId: id,
@@ -34,7 +35,7 @@ const cacheFile = async (userId, id, filePath, name, type) => {
 const getMetaData = async (userId, fileId) => {
 
     //Not retrieving the fileId since it is already passed as an argument
-    const metaData = await redisClient.HMGET(`files:${userId}:${fileId}`, ["fileName", "type", "uploadedAt"]);
+    const metaData = await redisQueryService.getFileFields(userId, fileId, ["fileName", "type", "uploadedAt"]);
     
     //Map the array to the object
     const structData = {
@@ -42,20 +43,6 @@ const getMetaData = async (userId, fileId) => {
         fileId: fileId,
         type: metaData[1],
         uploadedAt: metaData[2]
-    }
-
-    return structData;
-}
-
-const getMetaDataWithKey = async (key) => {
-    const metaData = await redisClient.HMGET(key, ["fileName", "type", "fileId", "uploadedAt"]);
-    
-    //Map the array to the object
-    const structData = {
-        fileName: metaData[0],
-        type: metaData[1],
-        fileId: metaData[2],
-        uploadedAt: metaData[3]
     }
 
     return structData;
@@ -87,5 +74,5 @@ const readAll = async (path) => {
 
 
 export default {
-    cacheFile, getMetaData, getMetaDataWithKey, parsePdf, readAll
+    cacheFile, getMetaData, parsePdf, readAll
 }

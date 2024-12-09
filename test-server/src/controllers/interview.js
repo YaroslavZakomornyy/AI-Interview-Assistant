@@ -45,6 +45,7 @@ async function recognizeSpeechFromBuffer(buffer) {
         audioStream.write(buffer);
         audioStream.close();
 
+        //Set some settings
         const audioConfig = AudioConfig.fromStreamInput(audioStream);
         const speechConfig = SpeechConfig.fromSubscription(speechKey, 'eastus');
         speechConfig.speechRecognitionLanguage = 'en-US';
@@ -55,28 +56,28 @@ async function recognizeSpeechFromBuffer(buffer) {
             (result) => {
                 switch (result.reason)
                 {
-                    case ResultReason.RecognizedSpeech:
-                        resolve({ response: result.text, error: null });
+                    case ResultReason.RecognizedSpeech: //Success
+                        resolve({ response: result.text });
                         break;
-                    case ResultReason.NoMatch:
-                        reject({ response: null, error: 'No speech recognized' });
+                    case ResultReason.NoMatch: //No speech recognized
+                        reject({ error: 'No speech recognized' });
                         break;
-                    case ResultReason.Canceled:
+                    case ResultReason.Canceled: //Recognition cancelled
                         const cancellation = CancellationDetails.fromResult(result);
                         let message = `Speech recognition canceled: ${cancellation.reason}`;
                         if (cancellation.reason === CancellationReason.Error)
                         {
                             message += `: ${cancellation.errorDetails}`;
                         }
-                        reject({ response: null, error: message });
+                        reject({ error: message });
                         break;
-                    default:
-                        reject({ response: null, error: 'Speech recognition failed with an unknown reason.' });
+                    default: //Something went wrong
+                        reject({ error: 'Speech recognition failed with an unknown reason.' });
                         break;
                 }
             },
             (err) => {
-                reject({ response: null, error: `Error recognizing speech: ${err}` });
+                reject({ error: `Error recognizing speech: ${err}` });
             }
         );
     });
@@ -92,7 +93,6 @@ const speechToText = async (req, res, next) => {
     {
         //Speech-to-text
         const { response: textResult, error } = await recognizeSpeechFromBuffer(audioBuffer);
-        console.log(textResult);
         if (error) throw new Error(error);
 
         return res.status(200).json({ message: textResult });
@@ -108,6 +108,7 @@ const speechToText = async (req, res, next) => {
     }
 }
 
+//Asks the AI to convert text to speech
 const textToSpeech = async (req, res, next) => {
     const message = req.body?.message;
 
@@ -149,6 +150,7 @@ const sendMessage = async (req, res, next) => {
 
     const { response, error } = await messageSenderService.sendInterviewMessage(req.userId, req.interviewId, userMessage);
     console.log(response.data.usage);
+
     if (error)
     {
         console.error(error);
@@ -163,6 +165,7 @@ const sendMessage = async (req, res, next) => {
 
 const create = async (req, res) => {
 
+    const userId = req.userId;
     // return res.sendStatus(200)
     const parameters = await JSON.parse(req.body.parameters || "");
 
@@ -190,26 +193,14 @@ const create = async (req, res) => {
     // Summarize a long job description and take out the most important stuff. It's cheaper this way than sending the whole thing every message
     if (jobDescription)
     {
-        const headers = {
-            "Content-Type": "application/json",
-            "api-key": apiKey
-        };
-
-        // Request payload
-        const payload = {
-            "messages": [
-                {
-                    role: "user",
-                    content: `You are an interviewer. Here is a long job description. Take out the important parts from it/summarize with important info and return it with no formatting at all for yourself: ${jobDescription}`
-                }
-            ],
-            "temperature": 0.7,
-            "top_p": 0.95,
-            "max_tokens": 400
-        };
+        const summary = messageSenderService.sendOneMessage(
+            `You are an interviewer. Here is a long job description. Take out the important parts from it/summarize with important info and return it with no formatting at all for yourself: ${jobDescription}`,
+            'user',
+            400
+        )
 
         //Send a message and wait for the reply
-        jobDescription = (await axios.post(endpoint, payload, { headers })).data.choices[0].message.content;
+        jobDescription = summary.response.data.choices[0].message.content;
         // console.log(jobDescription);
     }
 
@@ -217,46 +208,23 @@ const create = async (req, res) => {
     let resumeContent;
     if (resumeId)
     {
-        //Check if the file exists
-        if (!redisClient.exists(`files:${req.userId}:${resumeId}`))
-        {
-            return res.status(404).json({ error: 'File not found' });
-        }
 
-        const filePath = await redisClient.HGET(`files:${req.userId}:${resumeId}`, "path");
-        if (!filePath)
+        const { error, response: filePath } = await redisQueryService.getFileFields(userId, resumeId, ['path']);
+        if (error)
         {
-            console.log("file for interview is not found");
-            return res.sendStatus(500);
+            console.error("file for interview is not found");
+            return res.status(404).json({ error: 'File not found' });
         }
 
         const contents = await filesService.parsePdf(filePath);
 
-        const messages =
-            [
-                {
-                    "role": "user",
-                    "content": `You are an interviewer, summarize the important information from the resume for yourself (no formatting required at all): ${contents}`
-                },
-            ]
-
-        const headers = {
-            "Content-Type": "application/json",
-            "api-key": apiKey
-        };
-
-        // Request payload
-        const payload = {
-            "messages": messages,
-            "temperature": 0.7,
-            "top_p": 0.95,
-            "max_tokens": 400
-        };
-
-        resumeContent = (await axios.post(endpoint, payload, { headers })).data.choices[0].message.content;
+        resumeContent = await messageSenderService.sendOneMessage(
+            `You are an interviewer, summarize the important information from the resume for yourself (no formatting required at all): ${contents}`,
+            'user',
+            400
+        ).response.data.choices[0].message.content;
     }
 
-    //
     const params = buildParameterQuery({
         behavior: parameters.beh,
         workplace_quality: parameters.quality,
@@ -320,26 +288,25 @@ const getActive = async (req, res) => {
 
 const getData = async (req, res) => {
 
-    try
-    {
-        const interview = await redisClient.HGETALL(`interviews:${req.userId}:${req.interviewId}`);
-        // const history = fs.readFileSync();
+    const { error, response } = await redisQueryService.getInterviewFields(req.userId, req.interviewId);
 
-        return res.status(200).json(interview);
-    }
-    catch (error)
+    if (error)
     {
         return res.status(500).json({ error: error });
     }
 
+
+    return res.status(200).json(interview);
 }
 
 // Will delete an interview and its associated transcript
 const deleteInterview = async (req, res) => {
     try
     {
-        const transcriptId = await redisClient.HGET(`interviews:${req.userId}:${req.interviewId}`, 'transcriptId');
+        ({ error, response: transcriptId } = await redisQueryService.getInterviewFields(req.userId, req.interviewId, ['transcriptId']));
+        if (error) throw new Error(error);
         const transcriptPath = getTranscriptPath(req.userId, transcriptId);
+
 
         //Delete the transcrip file
         if (fs.existsSync(transcriptPath))
@@ -348,14 +315,20 @@ const deleteInterview = async (req, res) => {
         }
 
         //Delete the interview
-        await redisClient.del(`interviews:${req.userId}:${req.interviewId}`);
+        ({error} = await redisQueryService.deleteInterview(req.userId, req.interviewId));
+        
+        if (error) throw new Error(error);
 
         //Delete the transcript metadata
-        await redisClient.del(`files:${req.userId}:${transcriptId}`);
+        ({error} = await redisQueryService.deleteFile(req.userId, req.interviewId));
+        if (error) throw new Error(error);
+
+
         return res.sendStatus(204);
     }
     catch (error)
     {
+        console.error(error);
         return res.status(500).json({ error: error });
     }
 }

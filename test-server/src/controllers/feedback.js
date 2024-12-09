@@ -17,11 +17,6 @@ if (!apiKey || !endpoint)
 const interviewFeedback = async (req, res) => {
     const [interviewStatus, history, subEvaluations] = await redisClient.HMGET(`interviews:${req.userId}:${req.interviewId}`, ["status", "history", "subEvaluations"]);
     
-    // No feedback on running interview Disabled for tests
-    // if (interviewStatus === "Running") return res.status(409).json({error: "The interview is still running!"});
-    
-    // const transcript = await filesService.readAll(await redisClient.HGET(`files:${req.userId}:${transcriptId}`, "path"));
-    // console.log(history);
     const messages = [
         {
             "role": "system",

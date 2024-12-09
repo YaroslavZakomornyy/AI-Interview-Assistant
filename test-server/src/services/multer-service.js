@@ -28,6 +28,7 @@ const fileFilter = (req, file, cb) => {
         cb(new Error('Only .pdf files are allowed'), false); // Reject the file
     }
 };
+
 const uploadHandler = multer({ storage: storage, fileFilter: fileFilter, limits: { fileSize: 1048576 } }).single('file');
 
 export default {
