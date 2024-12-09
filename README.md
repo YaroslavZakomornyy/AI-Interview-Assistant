@@ -31,8 +31,15 @@ CSE Project at USF
 
 9. **Create a `.env` file** in the `/test-server` folder and insert the following lines (skip this step if the .env file provided):
    ```bash
-   API_KEY="YOUR KEY"
-   ENDPOINT="YOUR ENDPOINT"
+   API_KEY=""
+   CHAT_COMPLETION_ENDPOINT=""
+   ASSISTANT_ENDPOINT=""
+   REGION=""
+   AI_VERSION=""
+   ASSISTANT_ID=""
+   VECTOR_STORE_ID = ""
+   CAPSTONE_AZURE_AI_SERVICE_KEY = ""
+   CAPSTONE_AZURE_AI_SERVICE_ENDPOINT = ""
    ```
 10. **Install docker image**:
     In the root folder run
